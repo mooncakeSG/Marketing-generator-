@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: marketing-copy-generator
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: AI21_API_KEY
+        sync: false
+      - key: PORT
+        value: 3000
+    autoDeploy: true 
