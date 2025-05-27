@@ -128,7 +128,7 @@ app.post('/api/generate', async (req, res) => {
 
         console.log('Received response from AI21:', response.data);
         
-        if (!response.data || !response.data.output) {
+        if (!response.data || !response.data.choices || !response.data.choices[0]) {
             throw new Error('Invalid response from AI21');
         }
 
@@ -136,7 +136,7 @@ app.post('/api/generate', async (req, res) => {
         const formattedResponse = {
             choices: [{
                 message: {
-                    content: response.data.output
+                    content: response.data.choices[0].message.content
                 }
             }]
         };
@@ -150,6 +150,12 @@ app.post('/api/generate', async (req, res) => {
         res.json(formattedResponse);
     } catch (error) {
         console.error('Error in /api/generate:', error.response?.data || error.message);
+        console.error('Full error details:', {
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data,
+            message: error.message
+        });
         
         // Enhanced error response
         const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
