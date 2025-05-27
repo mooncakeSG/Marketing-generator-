@@ -3,10 +3,15 @@ services:
     name: marketing-copy-generator
     env: node
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node app.js
     envVars:
       - key: AI21_API_KEY
         sync: false
+      - key: NODE_ENV
+        value: production
       - key: PORT
         value: 3000
-    autoDeploy: true 
+    healthCheckPath: /health
+    autoDeploy: true
+    numInstances: 1
+    region: oregon 
