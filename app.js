@@ -89,7 +89,7 @@ app.post('/api/generate', async (req, res) => {
         const enhancedPrompt = `Generate marketing copy in a ${toneDescription} tone. ${prompt}`;
 
         const data = {
-            model: "j2-ultra",  // Using j2-ultra for better marketing copy
+            model: "jamba-large-1.6",  // Using jamba-large-1.6 for better marketing copy
             messages: [
                 {
                     role: "system",
