@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 # Configuration
 AI21_API_KEY = "e9b9875e-b832-45c1-b6c2-7794829fcc5f"
-AI21_API_URL = "https://api.ai21.com/studio/v1/jumba-large-1.6/complete"
+AI21_API_URL = "https://api.ai21.com/studio/v1/j2-large-instruct/complete"
 
 def generate_marketing_copy(product_type, platform, tone, features, length):
     start_time = time.time()
@@ -31,7 +31,6 @@ def generate_marketing_copy(product_type, platform, tone, features, length):
 
     data = {
         "prompt": prompt,
-        "model": "jamba-instruct",
         "numResults": 1,
         "maxTokens": 200,
         "temperature": 0.7,
@@ -112,4 +111,4 @@ def generate():
         return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(debug=True)

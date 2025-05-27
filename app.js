@@ -14,7 +14,7 @@ const port = 3000;
 
 // Configuration
 const AI21_API_KEY = "e9b9875e-b832-45c1-b6c2-7794829fcc5f";
-const AI21_API_URL = "https://api.ai21.com/studio/v1/jumba-large-1.6/complete";
+const AI21_API_URL = "https://api.ai21.com/studio/v1/j2-large-instruct/complete";
 
 app.use(express.json());
 app.use(express.static('public'));
