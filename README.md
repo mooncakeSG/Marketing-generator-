@@ -1,5 +1,7 @@
 # AI Marketing Copy Generator
 
+Deployment Website: https://marketing-generator.onrender.com
+
 A modern web application that generates marketing copy using AI21's language model, featuring a beautiful UI with animations and dark mode support.
 
 ## Features

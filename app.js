@@ -33,11 +33,12 @@ app.use((req, res, next) => {
 const AI21_API_KEY = process.env.AI21_API_KEY;
 const AI21_API_URL = "https://api.ai21.com/studio/v1/chat/completions";
 
-// Add validation for API key
 if (!AI21_API_KEY) {
-    console.error('AI21_API_KEY is not set in environment variables');
-    process.exit(1);
+    console.error('Error: AI21_API_KEY is not set in environment variables');
+    process.exit(1); // Exit if API key is not set
 }
+
+const authHeader = AI21_API_KEY.startsWith('Bearer ') ? AI21_API_KEY : `Bearer ${AI21_API_KEY}`;
 
 // Test the AI21 connection on startup
 async function testAI21Connection() {
@@ -46,24 +47,34 @@ async function testAI21Connection() {
             method: 'post',
             url: AI21_API_URL,
             headers: {
-                'Authorization': `Bearer ${AI21_API_KEY}`,
+                'Authorization': authHeader,
                 'Content-Type': 'application/json'
             },
             data: {
                 model: "jamba-large-1.6",
-                messages: [
-                    {
-                        role: "user",
-                        content: "Test connection"
-                    }
-                ],
-                max_tokens: 1
+                messages: [{ role: "user", content: "test" }],
+                documents: [],
+                tools: [],
+                n: 1,
+                max_tokens: 2048,
+                temperature: 0.4,
+                top_p: 1,
+                stop: [],
+                response_format: { type: "text" }
             }
         });
+        
         console.log('AI21 API connection test successful');
         return true;
     } catch (error) {
-        console.error('AI21 API connection test failed:', error.response?.data || error.message);
+        if (error.response) {
+            console.error('AI21 API connection test failed:', {
+                status: error.response.status,
+                data: error.response.data
+            });
+        } else {
+            console.error('AI21 API connection test failed:', error.message);
+        }
         return false;
     }
 }
@@ -86,22 +97,22 @@ app.post('/api/generate', async (req, res) => {
         if (toneValue <= 32) toneDescription = 'casual and friendly';
         else if (toneValue > 66) toneDescription = 'formal and professional';
 
-        const enhancedPrompt = `As a professional marketing copywriter, generate ${toneDescription} marketing copy for the following request: ${prompt}`;
-
+        const systemMessage = `You are a professional marketing copywriter. Generate ${toneDescription} marketing copy.`;
+        
         const data = {
             model: "jamba-large-1.6",
             messages: [
-                {
-                    role: "system",
-                    content: "You are a professional marketing copywriter skilled in creating compelling and persuasive content."
-                },
-                {
-                    role: "user",
-                    content: enhancedPrompt
-                }
+                { role: "system", content: systemMessage },
+                { role: "user", content: prompt }
             ],
-            temperature: 0.7,
-            maxTokens: 500
+            documents: [],
+            tools: [],
+            n: 1,
+            max_tokens: 2048,
+            temperature: 0.4,
+            top_p: 1,
+            stop: [],
+            response_format: { type: "text" }
         };
 
         console.log('Sending request to AI21 with data:', data);
@@ -109,7 +120,7 @@ app.post('/api/generate', async (req, res) => {
             method: 'post',
             url: AI21_API_URL,
             headers: {
-                'Authorization': `Bearer ${AI21_API_KEY}`,
+                'Authorization': authHeader,
                 'Content-Type': 'application/json'
             },
             data: data
@@ -125,7 +136,7 @@ app.post('/api/generate', async (req, res) => {
         const formattedResponse = {
             choices: [{
                 message: {
-                    content: response.data.output.text.trim()
+                    content: response.data.output
                 }
             }]
         };
