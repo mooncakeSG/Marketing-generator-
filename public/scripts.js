@@ -70,9 +70,9 @@ function initializeAnimations() {
 function populateHistory() {
     const historyList = document.getElementById('historyList');
     historyList.innerHTML = mockHistory.map(item => `
-        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 shadow-sm transition-all hover:shadow-md">
-            <div class="font-medium text-gray-900 dark:text-white mb-1">${item.type}</div>
-            <p class="text-sm text-gray-600 dark:text-gray-300">${item.content.substring(0, 100)}...</p>
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 shadow-sm transition-all hover:shadow-md">
+            <div class="text-sm font-medium text-gray-900 dark:text-white mb-1">${item.type}</div>
+            <p class="text-xs text-gray-600 dark:text-gray-300">${item.content.substring(0, 100)}...</p>
         </div>
     `).join('');
 
