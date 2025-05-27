@@ -86,10 +86,10 @@ app.post('/api/generate', async (req, res) => {
         if (toneValue <= 32) toneDescription = 'casual and friendly';
         else if (toneValue > 66) toneDescription = 'formal and professional';
 
-        const enhancedPrompt = `Generate marketing copy in a ${toneDescription} tone. ${prompt}`;
+        const enhancedPrompt = `As a professional marketing copywriter, generate ${toneDescription} marketing copy for the following request: ${prompt}`;
 
         const data = {
-            model: "j2-ultra",  // Using j2-ultra for better marketing copy
+            model: "jamba-large-1.6",
             messages: [
                 {
                     role: "system",
@@ -117,7 +117,7 @@ app.post('/api/generate', async (req, res) => {
 
         console.log('Received response from AI21:', response.data);
         
-        if (!response.data || !response.data.completions || !response.data.completions[0]) {
+        if (!response.data || !response.data.output) {
             throw new Error('Invalid response from AI21');
         }
 
@@ -125,7 +125,7 @@ app.post('/api/generate', async (req, res) => {
         const formattedResponse = {
             choices: [{
                 message: {
-                    content: response.data.completions[0].text.trim()
+                    content: response.data.output.text.trim()
                 }
             }]
         };
@@ -139,9 +139,13 @@ app.post('/api/generate', async (req, res) => {
         res.json(formattedResponse);
     } catch (error) {
         console.error('Error in /api/generate:', error.response?.data || error.message);
+        
+        // Enhanced error response
+        const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
         res.status(500).json({
             error: 'Failed to generate marketing copy',
-            details: error.message
+            details: errorMessage,
+            technical_details: error.response?.data || null
         });
     }
 });
