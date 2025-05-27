@@ -123,17 +123,23 @@ app.post('/api/generate', async (req, res) => {
         const formattedResponse = {
             choices: [{
                 message: {
-                    content: response.data.output?.text || response.data.completions[0]?.data?.text || response.data.text || ''
+                    content: response.data.output?.text || response.data.completions?.[0]?.text || response.data.text || ''
                 }
             }]
         };
+
+        console.log('Sending formatted response to frontend:', formattedResponse);
+        
+        if (!formattedResponse.choices[0].message.content) {
+            throw new Error('No content received from AI21');
+        }
         
         res.json(formattedResponse);
     } catch (error) {
         console.error('Error in /api/generate:', error.response?.data || error.message);
         res.status(500).json({
             error: 'Failed to generate marketing copy',
-            details: error.response?.data || error.message
+            details: error.response?.data?.message || error.response?.data || error.message
         });
     }
 });

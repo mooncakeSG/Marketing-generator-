@@ -181,71 +181,70 @@ async function generateCopy() {
             })
         });
 
-        if (!response.ok) {
-            throw new Error('Server responded with status: ' + response.status);
-        }
-
         const data = await response.json();
         console.log('Received API response:', data);
 
         // Hide spinner
         spinner.classList.add('hidden');
 
-        // Extract the generated text from the response
-        let generatedText = '';
-        if (data.choices && data.choices[0] && data.choices[0].message) {
-            generatedText = data.choices[0].message.content;
-            console.log('Extracted generated text:', generatedText);
-        } else {
-            console.error('Unexpected response format:', data);
-            throw new Error('Unexpected response format from server');
+        if (!response.ok) {
+            throw new Error(data.error || data.details || 'Failed to generate content');
         }
 
-        if (generatedText) {
-            // Update result area with the generated text
-            resultDiv.innerHTML = `
-                <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
-                    <div class="text-gray-900 dark:text-white whitespace-pre-wrap mb-4">${generatedText}</div>
-                    <button onclick="copyToClipboard(this)" class="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
-                        </svg>
-                        Copy to Clipboard
-                    </button>
-                </div>`;
-
-            // Add to history
-            mockHistory.unshift({
-                type: 'Generated Copy',
-                content: generatedText
-            });
-
-            // Keep only the last 10 items in history
-            if (mockHistory.length > 10) {
-                mockHistory = mockHistory.slice(0, 10);
-            }
-
-            // Update history panel
-            populateHistory();
-
-            // Animate result
-            gsap.from('#result > div', {
-                y: 20,
-                opacity: 0,
-                duration: 0.5,
-                ease: 'power3.out'
-            });
+        if (!data.choices?.[0]?.message?.content) {
+            console.error('Invalid response format:', data);
+            throw new Error('Invalid response format from server');
         }
+
+        const generatedText = data.choices[0].message.content;
+        console.log('Generated text:', generatedText);
+
+        // Update result area with the generated text
+        resultDiv.innerHTML = `
+            <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+                <div class="text-gray-900 dark:text-white whitespace-pre-wrap mb-4">${generatedText}</div>
+                <button onclick="copyToClipboard(this)" class="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                    </svg>
+                    Copy to Clipboard
+                </button>
+            </div>`;
+
+        // Add to history
+        mockHistory.unshift({
+            type: 'Generated Copy',
+            content: generatedText
+        });
+
+        // Keep only the last 10 items in history
+        if (mockHistory.length > 10) {
+            mockHistory = mockHistory.slice(0, 10);
+        }
+
+        // Update history panel
+        populateHistory();
+
+        // Animate result
+        gsap.from('#result > div', {
+            y: 20,
+            opacity: 0,
+            duration: 0.5,
+            ease: 'power3.out'
+        });
+
     } catch (error) {
         console.error('Error details:', error);
         resultDiv.innerHTML = `
             <div class="bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 p-4 rounded-lg">
-                Error generating copy: ${error.message}
+                <p class="font-medium">Error generating copy:</p>
+                <p class="mt-1">${error.message}</p>
             </div>`;
     } finally {
         generateBtn.disabled = false;
         clearBtn.disabled = false;
+        spinner.classList.add('hidden');
     }
 }
 
