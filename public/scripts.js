@@ -121,15 +121,41 @@ toneSlider.addEventListener('input', () => {
 // Dark mode toggle
 function toggleDarkMode() {
     const isDark = document.body.classList.toggle('dark');
-    sunIcon.classList.toggle('hidden');
-    moonIcon.classList.toggle('hidden');
     
-    // Animate transition
-    gsap.to('body', {
-        backgroundColor: isDark ? '#111827' : '#f9fafb',
-        duration: 0.3
-    });
+    // Add null checks for icons
+    if (sunIcon && moonIcon) {
+        sunIcon.classList.toggle('hidden');
+        moonIcon.classList.toggle('hidden');
+    }
+    
+    // Update theme in localStorage
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    
+    // Animate transition if GSAP is available
+    if (typeof gsap !== 'undefined') {
+        gsap.to('body', {
+            backgroundColor: isDark ? '#111827' : '#f9fafb',
+            duration: 0.3
+        });
+    }
 }
+
+// Initialize theme on page load
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark');
+        if (sunIcon) sunIcon.classList.add('hidden');
+        if (moonIcon) moonIcon.classList.remove('hidden');
+    } else {
+        document.body.classList.remove('dark');
+        if (sunIcon) sunIcon.classList.remove('hidden');
+        if (moonIcon) moonIcon.classList.add('hidden');
+    }
+}
+
+// Call initTheme when DOM is loaded
+document.addEventListener('DOMContentLoaded', initTheme);
 
 // Button hover animations
 document.querySelectorAll('button').forEach(button => {
@@ -165,19 +191,16 @@ function useTemplate(type) {
 async function generateCopy() {
     const prompt = promptInput.value.trim();
     if (!prompt) {
-        resultDiv.innerHTML = `
-            <div class="bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 p-4 rounded-lg">
-                Please enter a prompt
-            </div>`;
+        showError('Please enter a prompt');
         return;
     }
 
     try {
+        // Disable buttons and show loading state
         generateBtn.disabled = true;
         clearBtn.disabled = true;
-
-        // Show loading spinner
         loadingSpinner.classList.remove('hidden');
+        resultDiv.innerHTML = ''; // Clear previous results
 
         console.log('Sending request with prompt:', prompt);
         const response = await fetch('/api/generate', {
@@ -192,81 +215,70 @@ async function generateCopy() {
         });
 
         const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to generate copy');
+        }
+
         console.log('Received API response:', data);
 
-        // Hide spinner
-        loadingSpinner.classList.add('hidden');
-
-        if (!response.ok) {
-            const errorMessage = data.details || data.error || 'Failed to generate content';
-            throw new Error(errorMessage);
-        }
-
         if (!data.choices?.[0]?.message?.content) {
-            console.error('Invalid response format:', data);
-            throw new Error('Invalid response format from server');
+            throw new Error('Invalid response format');
         }
 
-        const generatedText = data.choices[0].message.content;
-        console.log('Generated text:', generatedText);
-
-        // Update result area with the generated text
+        // Display the generated content
+        const content = data.choices[0].message.content;
         resultDiv.innerHTML = `
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-                <div class="text-gray-900 dark:text-white whitespace-pre-wrap mb-4">${generatedText}</div>
-                <div class="flex justify-between items-center">
-                    <button onclick="copyToClipboard(this)" class="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
-                        </svg>
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Generated Copy</h3>
+                    <button onclick="copyToClipboard(this)" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
                         Copy to Clipboard
                     </button>
-                    <span class="text-xs text-gray-500 dark:text-gray-400">Generated with AI21</span>
                 </div>
-            </div>`;
+                <div class="prose dark:prose-invert">
+                    ${content.split('\n').map(line => `<p>${line}</p>`).join('')}
+                </div>
+            </div>
+        `;
 
-        // Add to history
-        mockHistory.unshift({
-            type: 'Generated Copy',
-            content: generatedText
-        });
-
-        // Keep only the last 10 items in history
-        if (mockHistory.length > 10) {
-            mockHistory = mockHistory.slice(0, 10);
+        // Add to history if available
+        if (typeof addToHistory === 'function') {
+            addToHistory({
+                type: 'Generated Copy',
+                content: content
+            });
         }
 
-        // Update history panel
-        populateHistory();
-
-        // Animate result
-        gsap.from('#result > div', {
-            y: 20,
-            opacity: 0,
-            duration: 0.5,
-            ease: 'power3.out'
-        });
-
     } catch (error) {
-        console.error('Error details:', error);
-        resultDiv.innerHTML = `
-            <div class="bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 p-4 rounded-lg">
-                <p class="font-medium">Error generating copy:</p>
-                <p class="mt-1">${error.message}</p>
-                <button onclick="retryGeneration()" class="mt-3 px-4 py-2 text-sm bg-red-100 dark:bg-red-800 rounded-lg hover:bg-red-200 dark:hover:bg-red-700 transition-colors">
-                    Try Again
-                </button>
-            </div>`;
+        console.error('Generation error:', error);
+        showError(error.message);
     } finally {
+        // Re-enable buttons and hide loading state
         generateBtn.disabled = false;
         clearBtn.disabled = false;
         loadingSpinner.classList.add('hidden');
     }
 }
 
-function retryGeneration() {
-    generateCopy();
+// Helper function to show errors
+function showError(message) {
+    resultDiv.innerHTML = `
+        <div class="bg-red-50 dark:bg-red-900 border-l-4 border-red-500 p-4 rounded-lg">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-red-700 dark:text-red-300">
+                        ${message}
+                    </p>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // Clear function

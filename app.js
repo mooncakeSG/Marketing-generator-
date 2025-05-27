@@ -123,45 +123,54 @@ app.post('/api/generate', async (req, res) => {
                 'Authorization': authHeader,
                 'Content-Type': 'application/json'
             },
-            data: data
+            data: data,
+            timeout: 30000 // 30 second timeout
         });
 
         console.log('Received response from AI21:', response.data);
         
         if (!response.data || !response.data.choices || !response.data.choices[0]) {
-            throw new Error('Invalid response from AI21');
+            throw new Error('Invalid or empty response from AI21');
         }
 
-        // Format the response to match what the frontend expects
-        const formattedResponse = {
-            choices: [{
-                message: {
-                    content: response.data.choices[0].message.content
-                }
-            }]
-        };
-
-        console.log('Sending formatted response to frontend:', formattedResponse);
+        const generatedContent = response.data.choices[0].message?.content;
         
-        if (!formattedResponse.choices[0].message.content) {
+        if (!generatedContent) {
             throw new Error('No content received from AI21');
         }
         
-        res.json(formattedResponse);
-    } catch (error) {
-        console.error('Error in /api/generate:', error.response?.data || error.message);
-        console.error('Full error details:', {
-            status: error.response?.status,
-            statusText: error.response?.statusText,
-            data: error.response?.data,
-            message: error.message
+        res.json({
+            choices: [{
+                message: {
+                    content: generatedContent
+                }
+            }]
         });
+    } catch (error) {
+        console.error('Error in /api/generate:', error);
         
-        // Enhanced error response
-        const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
-        res.status(500).json({
-            error: 'Failed to generate marketing copy',
-            details: errorMessage,
+        // Determine the appropriate error message and status code
+        let statusCode = 500;
+        let errorMessage = 'Failed to generate marketing copy';
+        
+        if (error.response) {
+            // API responded with an error
+            statusCode = error.response.status;
+            errorMessage = error.response.data?.error || error.response.data?.message || errorMessage;
+            
+            if (statusCode === 401 || statusCode === 403) {
+                errorMessage = 'API authentication failed. Please check your API key.';
+            } else if (statusCode === 429) {
+                errorMessage = 'Rate limit exceeded. Please try again later.';
+            }
+        } else if (error.code === 'ECONNABORTED') {
+            statusCode = 504;
+            errorMessage = 'Request timed out. Please try again.';
+        }
+        
+        res.status(statusCode).json({
+            error: errorMessage,
+            details: error.message,
             technical_details: error.response?.data || null
         });
     }
