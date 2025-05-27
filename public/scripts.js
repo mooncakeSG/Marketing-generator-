@@ -10,7 +10,7 @@ const sunIcon = document.querySelector('.sun');
 const moonIcon = document.querySelector('.moon');
 
 // Mock history data
-const mockHistory = [
+let mockHistory = [
     { type: 'Product Launch', content: 'Introducing our revolutionary smartwatch that combines cutting-edge health tracking with seamless productivity features...' },
     { type: 'Social Media', content: 'Transform your daily routine with AI-powered insights. Our smartwatch learns your patterns and helps you achieve more...' },
     { type: 'Email Campaign', content: 'Limited time offer: Experience the future of health and productivity with 30% off our premium smartwatch...' }
@@ -77,7 +77,7 @@ function populateHistory() {
     `).join('');
 
     // Animate new history items
-    gsap.from('.history-item', {
+    gsap.from('#historyList > div', {
         x: 20,
         opacity: 0,
         duration: 0.5,
@@ -192,10 +192,11 @@ async function generateCopy() {
         if (data.choices && data.choices[0]) {
             const generatedText = data.choices[0].message.content;
             
+            // Update result area
             resultDiv.innerHTML = `
                 <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
                     <p class="text-gray-900 dark:text-white whitespace-pre-wrap">${generatedText}</p>
-                    <button onclick="copyToClipboard()" class="mt-4 px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
+                    <button onclick="copyToClipboard(this)" class="mt-4 px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
                             <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
@@ -206,13 +207,20 @@ async function generateCopy() {
 
             // Add to history
             mockHistory.unshift({
-                type: 'Custom',
+                type: 'Generated Copy',
                 content: generatedText
             });
+
+            // Keep only the last 10 items in history
+            if (mockHistory.length > 10) {
+                mockHistory = mockHistory.slice(0, 10);
+            }
+
+            // Update history panel
             populateHistory();
 
             // Animate result
-            gsap.from('.result-card', {
+            gsap.from('#result > div', {
                 y: 20,
                 opacity: 0,
                 duration: 0.5,
@@ -245,31 +253,28 @@ function clearAll() {
 }
 
 // Copy to clipboard function
-async function copyToClipboard() {
-    const resultCard = document.querySelector('.result-card');
-    if (resultCard) {
-        try {
-            await navigator.clipboard.writeText(resultCard.textContent);
-            const copyBtn = document.querySelector('.copy-btn');
-            const originalText = copyBtn.innerHTML;
-            copyBtn.innerHTML = `
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 6L9 17l-5-5"/>
-                </svg>
-                Copied!`;
-            
-            gsap.from(copyBtn, {
-                scale: 0.9,
-                duration: 0.3,
-                ease: 'back.out(1.7)'
-            });
-            
-            setTimeout(() => {
-                copyBtn.innerHTML = originalText;
-            }, 2000);
-        } catch (err) {
-            console.error('Failed to copy text:', err);
-        }
+async function copyToClipboard(button) {
+    const textToCopy = button.parentElement.querySelector('p').textContent;
+    try {
+        await navigator.clipboard.writeText(textToCopy);
+        const originalText = button.innerHTML;
+        button.innerHTML = `
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 6L9 17l-5-5"/>
+            </svg>
+            Copied!`;
+        
+        gsap.from(button, {
+            scale: 0.9,
+            duration: 0.3,
+            ease: 'back.out(1.7)'
+        });
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+        }, 2000);
+    } catch (err) {
+        console.error('Failed to copy text:', err);
     }
 }
 
@@ -284,5 +289,5 @@ promptInput.addEventListener('keydown', (e) => {
 // Initialize
 window.addEventListener('load', () => {
     initializeAnimations();
-    populateHistory();
+    populateHistory(); // Initialize history panel on load
 }); 
