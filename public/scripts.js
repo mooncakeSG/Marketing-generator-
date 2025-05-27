@@ -1,3 +1,6 @@
+// Debug: Log script initialization
+console.log('Script starting initialization');
+
 // Initialize variables
 const generateBtn = document.getElementById('generateBtn');
 const clearBtn = document.getElementById('clearBtn');
@@ -9,12 +12,19 @@ const darkModeToggle = document.querySelector('.dark-mode-toggle');
 const sunIcon = document.querySelector('.sun');
 const moonIcon = document.querySelector('.moon');
 const loadingSpinner = document.getElementById('loadingSpinner');
+const form = document.getElementById('generatorForm');
+const prompt = document.getElementById('prompt');
+const toneLabel = document.getElementById('toneLabel');
+const historyPanel = document.getElementById('historyPanel');
+const spinner = document.querySelector('.spinner');
+const mascot = document.querySelector('.mascot');
 
 // Mock history data
-let mockHistory = [
-    { type: 'Product Launch', content: 'Introducing our revolutionary smartwatch that combines cutting-edge health tracking with seamless productivity features...' },
-    { type: 'Social Media', content: 'Transform your daily routine with AI-powered insights. Our smartwatch learns your patterns and helps you achieve more...' },
-    { type: 'Email Campaign', content: 'Limited time offer: Experience the future of health and productivity with 30% off our premium smartwatch...' }
+const mockHistory = [
+    "Engaging product launch copy for the next generation smartwatch",
+    "Compelling email campaign for summer sale promotion",
+    "Professional service description for consulting firm",
+    "Casual social media post for coffee shop opening"
 ];
 
 // Templates
@@ -300,8 +310,296 @@ promptInput.addEventListener('keydown', (e) => {
     }
 });
 
-// Initialize
-window.addEventListener('load', () => {
-    initializeAnimations();
-    populateHistory(); // Initialize history panel on load
-}); 
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM fully loaded');
+
+    // Debug: Check if main elements exist
+    const debugElements = {
+        form: document.getElementById('generatorForm'),
+        prompt: document.getElementById('prompt'),
+        toneSlider: document.getElementById('toneSlider'),
+        toneLabel: document.getElementById('toneLabel'),
+        historyPanel: document.getElementById('historyPanel'),
+        darkModeToggle: document.getElementById('darkModeToggle'),
+        spinner: document.querySelector('.spinner'),
+        mascot: document.querySelector('.mascot'),
+        mainContent: document.querySelector('.main-content')
+    };
+
+    // Debug: Log which elements were found/not found
+    Object.entries(debugElements).forEach(([name, element]) => {
+        console.log(`${name}: ${element ? 'Found' : 'Not found'}`);
+    });
+
+    // Assign found elements to variables
+    const {
+        form,
+        prompt,
+        toneSlider,
+        toneLabel,
+        historyPanel,
+        darkModeToggle,
+        spinner,
+        mascot,
+        mainContent
+    } = debugElements;
+
+    // Mock history data
+    const mockHistory = [
+        "Engaging product launch copy for the next generation smartwatch",
+        "Compelling email campaign for summer sale promotion",
+        "Professional service description for consulting firm",
+        "Casual social media post for coffee shop opening"
+    ];
+
+    // Initialize GSAP animations
+    function initAnimations() {
+        console.log('Initializing animations');
+        
+        // Make sure content is visible first
+        if (mainContent) {
+            mainContent.style.opacity = '1';
+            console.log('Main content visibility set to visible');
+        }
+
+        // Initial page load animation
+        gsap.to('.main-content', {
+            opacity: 1,
+            duration: 0.8,
+            ease: 'power2.out',
+            onComplete: () => console.log('Main content fade-in complete')
+        });
+
+        // Mascot floating animation
+        if (mascot) {
+            gsap.to(mascot, {
+                y: -10,
+                duration: 1.5,
+                repeat: -1,
+                yoyo: true,
+                ease: 'power1.inOut'
+            });
+        }
+
+        // Button hover animations
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mouseenter', () => {
+                gsap.to(button, {
+                    scale: 1.05,
+                    duration: 0.2
+                });
+            });
+
+            button.addEventListener('mouseleave', () => {
+                gsap.to(button, {
+                    scale: 1,
+                    duration: 0.2
+                });
+            });
+
+            button.addEventListener('mousedown', () => {
+                gsap.to(button, {
+                    scale: 0.95,
+                    duration: 0.1
+                });
+            });
+
+            button.addEventListener('mouseup', () => {
+                gsap.to(button, {
+                    scale: 1,
+                    duration: 0.1
+                });
+            });
+        });
+    }
+
+    // Dark mode toggle
+    function initDarkMode() {
+        console.log('Initializing dark mode');
+        if (!darkModeToggle) {
+            console.log('Dark mode toggle not found');
+            return;
+        }
+
+        const isDark = localStorage.getItem('darkMode') === 'true';
+        document.documentElement.classList.toggle('dark', isDark);
+
+        darkModeToggle.addEventListener('click', () => {
+            // Fade out
+            gsap.to('body', {
+                opacity: 0,
+                duration: 0.3,
+                onComplete: () => {
+                    document.documentElement.classList.toggle('dark');
+                    // Fade in
+                    gsap.to('body', {
+                        opacity: 1,
+                        duration: 0.3
+                    });
+                    localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+                }
+            });
+        });
+    }
+
+    // Tone slider functionality
+    function initToneSlider() {
+        console.log('Initializing tone slider');
+        if (!toneSlider || !toneLabel) {
+            console.log('Tone slider or label not found');
+            return;
+        }
+
+        function updateToneLabel(value) {
+            let tone = 'Neutral';
+            if (value <= 32) tone = 'Casual';
+            else if (value > 66) tone = 'Formal';
+            toneLabel.textContent = tone;
+
+            // Animate the label change
+            gsap.from(toneLabel, {
+                y: -10,
+                opacity: 0,
+                duration: 0.3,
+                ease: 'power2.out'
+            });
+        }
+
+        toneSlider.addEventListener('input', (e) => {
+            updateToneLabel(e.target.value);
+        });
+
+        // Initialize with default value
+        updateToneLabel(toneSlider.value);
+    }
+
+    // Populate history panel
+    function populateHistory() {
+        console.log('Populating history panel');
+        if (!historyPanel) {
+            console.log('History panel not found');
+            return;
+        }
+        
+        // Clear existing content
+        historyPanel.innerHTML = '';
+
+        mockHistory.forEach(text => {
+            const item = document.createElement('div');
+            item.className = 'history-item text-gray-700 dark:text-gray-300 text-sm';
+            item.textContent = text;
+            historyPanel.appendChild(item);
+
+            // Animate each history item
+            gsap.from(item, {
+                x: -20,
+                opacity: 0,
+                duration: 0.5,
+                ease: 'power2.out'
+            });
+        });
+    }
+
+    // Form submission handling
+    if (form) {
+        console.log('Setting up form handlers');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!prompt || !prompt.value.trim()) {
+                console.error('No prompt provided');
+                return;
+            }
+
+            // Show spinner
+            if (spinner) {
+                spinner.classList.remove('hidden');
+                spinner.classList.add('active');
+            }
+            
+            // Disable form
+            form.querySelectorAll('button, input, textarea').forEach(el => el.disabled = true);
+            
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt.value,
+                        tone: toneSlider ? toneSlider.value : 50
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                if (historyPanel && data.choices?.[0]?.message?.content) {
+                    // Add to history panel
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item text-gray-700 dark:text-gray-300 text-sm';
+                    historyItem.textContent = data.choices[0].message.content;
+                    historyPanel.insertBefore(historyItem, historyPanel.firstChild);
+
+                    // Animate new history item
+                    gsap.from(historyItem, {
+                        x: -20,
+                        opacity: 0,
+                        duration: 0.5,
+                        ease: 'power2.out'
+                    });
+                }
+
+            } catch (error) {
+                console.error('Generation error:', error);
+            } finally {
+                // Hide spinner after 2 seconds (simulated delay)
+                if (spinner) {
+                    setTimeout(() => {
+                        spinner.classList.add('hidden');
+                        spinner.classList.remove('active');
+                        // Re-enable form
+                        form.querySelectorAll('button, input, textarea').forEach(el => el.disabled = false);
+                    }, 2000);
+                }
+            }
+        });
+
+        // Clear form
+        form.addEventListener('reset', () => {
+            if (!prompt) return;
+            
+            // Animate clear
+            gsap.to(prompt, {
+                scale: 0.95,
+                opacity: 0.5,
+                duration: 0.2,
+                onComplete: () => {
+                    prompt.value = '';
+                    gsap.to(prompt, {
+                        scale: 1,
+                        opacity: 1,
+                        duration: 0.2
+                    });
+                }
+            });
+        });
+    }
+
+    // Initialize everything
+    console.log('Starting initialization sequence');
+    initAnimations();
+    initDarkMode();
+    initToneSlider();
+    populateHistory();
+    console.log('Initialization sequence complete');
+});
+
+// Debug: Log when script reaches the end
+console.log('Script loaded completely'); 

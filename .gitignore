@@ -48,7 +48,7 @@ pids
 Thumbs.db
 
 # Build/Deploy
-dist/
-build/
+/dist
+/build
 .vercel
 .netlify

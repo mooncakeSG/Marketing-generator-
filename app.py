@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response
 import requests
 import os
 from dotenv import load_dotenv
 import time
+from datetime import datetime, timedelta
 
 # Load environment variables
 load_dotenv('example.env')
@@ -12,6 +13,20 @@ app = Flask(__name__)
 # Configuration
 AI21_API_KEY = "e9b9875e-b832-45c1-b6c2-7794829fcc5f"
 AI21_API_URL = "https://api.ai21.com/studio/v1/j2-ultra/complete"
+
+def add_cache_headers(response, cache_timeout=300):  # 5 minutes default
+    response.headers['Cache-Control'] = f'public, max-age={cache_timeout}'
+    response.headers['Expires'] = (datetime.utcnow() + timedelta(seconds=cache_timeout)).strftime('%a, %d %b %Y %H:%M:%S GMT')
+    return response
+
+@app.after_request
+def add_security_headers(response):
+    # Add security headers
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    return response
 
 def generate_marketing_copy(product_type, platform, tone, features, length):
     start_time = time.time()
@@ -54,11 +69,7 @@ def generate_marketing_copy(product_type, platform, tone, features, length):
     }
 
     try:
-        print("Sending request to AI21 API...")
-        response = requests.post(AI21_API_URL, headers=headers, json=data)
-        print(f"Response status code: {response.status_code}")
-        print(f"Response: {response.text}")
-        
+        response = requests.post(AI21_API_URL, headers=headers, json=data, timeout=30)
         generation_time = time.time() - start_time
         
         if response.status_code != 200:
@@ -66,7 +77,6 @@ def generate_marketing_copy(product_type, platform, tone, features, length):
             return None, generation_time
             
         result = response.json()
-        print(f"API Response: {result}")
         
         if 'completions' in result and len(result['completions']) > 0:
             return result['completions'][0]['data']['text'], generation_time
@@ -80,7 +90,8 @@ def generate_marketing_copy(product_type, platform, tone, features, length):
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    response = make_response(render_template('index.html'))
+    return add_cache_headers(response, cache_timeout=3600)  # Cache for 1 hour
 
 @app.route('/generate', methods=['POST'])
 def generate():
@@ -98,11 +109,14 @@ def generate():
         copy, generation_time = generate_marketing_copy(product_type, platform, tone, features, length)
         
         if copy:
-            return jsonify({
+            response = jsonify({
                 'success': True, 
                 'copy': copy,
                 'generation_time': round(generation_time, 2)
             })
+            # Don't cache API responses
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+            return response
         else:
             return jsonify({'success': False, 'error': 'Failed to generate copy. Check the console for details.'})
 

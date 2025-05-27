@@ -1,86 +1,754 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Marketing Copy Generator</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <link href="styles.css" rel="stylesheet">
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.className;
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.className = newTheme;
+            localStorage.setItem('theme', newTheme);
+            
+            // Update button text and icon
+            const themeButton = document.getElementById('themeButton');
+            if (themeButton) {
+                themeButton.innerHTML = `
+                    ${newTheme === 'dark' ? 'Light' : 'Dark'} Mode
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        ${newTheme === 'dark' 
+                            ? '<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>'
+                            : '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>'}
+                    </svg>
+                `;
+            }
+        }
+
+        // Initialize theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.className = savedTheme;
+            
+            const themeButton = document.getElementById('themeButton');
+            if (themeButton) {
+                themeButton.innerHTML = `
+                    ${savedTheme === 'dark' ? 'Light' : 'Dark'} Mode
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        ${savedTheme === 'dark' 
+                            ? '<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>'
+                            : '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>'}
+                    </svg>
+                `;
+            }
+        });
+    </script>
+    <style>
+        /* Critical styles inline to ensure visibility */
+        .container {
+            max-width: 800px !important;
+            margin: 40px auto !important;
+            padding: 0 20px !important;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid #e5e7eb !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+            padding: 32px !important;
+            margin-bottom: 40px !important;
+        }
+
+        .header-container {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            margin-bottom: 32px !important;
+        }
+
+        h1 {
+            font-size: 32px !important;
+            margin: 0 !important;
+            color: var(--text-color) !important;
+        }
+
+        .subtitle {
+            font-size: 18px !important;
+            color: var(--text-color) !important;
+            margin-bottom: 32px !important;
+            opacity: 0.8 !important;
+        }
+
+        .template-section {
+            margin: 32px 0 !important;
+        }
+
+        .template-section h2 {
+            font-size: 24px !important;
+            margin-bottom: 20px !important;
+            color: var(--text-color) !important;
+        }
+
+        .template-buttons {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+            gap: 16px !important;
+            margin-bottom: 32px !important;
+            background: #f3f4f6 !important;
+            padding: 24px !important;
+            border-radius: 12px !important;
+        }
+
+        .form-group {
+            margin-bottom: 32px !important;
+        }
+
+        .form-group label {
+            display: block !important;
+            font-size: 18px !important;
+            font-weight: 500 !important;
+            margin-bottom: 12px !important;
+            color: var(--text-color) !important;
+        }
+
+        textarea {
+            width: 100% !important;
+            min-height: 120px !important;
+            padding: 16px !important;
+            border: 2px solid #e5e7eb !important;
+            border-radius: 8px !important;
+            font-size: 16px !important;
+            line-height: 1.5 !important;
+            margin-bottom: 24px !important;
+            resize: vertical !important;
+        }
+
+        .slider-container {
+            margin: 32px 0 !important;
+            padding: 0 12px !important;
+            position: relative !important;
+        }
+
+        .tone-slider {
+            -webkit-appearance: none !important;
+            width: 100% !important;
+            height: 6px !important;
+            background: linear-gradient(to right, #3B82F6, #6366F1, #8B5CF6) !important;
+            border-radius: 3px !important;
+            outline: none !important;
+            opacity: 0.7 !important;
+            transition: opacity 0.2s !important;
+        }
+
+        .tone-slider:hover {
+            opacity: 1 !important;
+        }
+
+        .tone-slider::-webkit-slider-thumb {
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            width: 20px !important;
+            height: 20px !important;
+            background: white !important;
+            border: 2px solid #3B82F6 !important;
+            border-radius: 50% !important;
+            cursor: pointer !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.2s !important;
+        }
+
+        .tone-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1) !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .tone-labels {
+            display: flex !important;
+            justify-content: space-between !important;
+            margin-top: 16px !important;
+            color: var(--text-color) !important;
+            font-size: 14px !important;
+            position: relative !important;
+        }
+
+        .tone-value {
+            position: absolute !important;
+            top: -25px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            background: #3B82F6 !important;
+            color: white !important;
+            padding: 4px 8px !important;
+            border-radius: 4px !important;
+            font-size: 12px !important;
+            opacity: 0 !important;
+            transition: opacity 0.2s !important;
+            pointer-events: none !important;
+        }
+
+        .tone-slider:active + .tone-value,
+        .tone-slider:hover + .tone-value {
+            opacity: 1 !important;
+        }
+
+        .tone-description {
+            text-align: center !important;
+            margin-top: 8px !important;
+            font-size: 14px !important;
+            color: #6B7280 !important;
+            min-height: 40px !important;
+        }
+
+        .button-group {
+            display: flex !important;
+            gap: 16px !important;
+            margin-top: 32px !important;
+        }
+
+        .btn {
+            padding: 12px 24px !important;
+            border-radius: 8px !important;
+            font-size: 16px !important;
+            font-weight: 500 !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-width: 160px !important;
+            justify-content: center !important;
+        }
+
+        .btn-primary {
+            background: #2563eb !important;
+            color: white !important;
+            border: none !important;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6 !important;
+            color: #2563eb !important;
+            border: 2px solid #2563eb !important;
+        }
+
+        .loading {
+            text-align: center !important;
+            padding: 32px !important;
+            margin: 32px 0 !important;
+        }
+
+        .result {
+            margin-top: 32px !important;
+            padding: 24px !important;
+            border-top: 2px solid #e5e7eb !important;
+        }
+
+        .copy-text {
+            background: #f9fafb !important;
+            padding: 20px !important;
+            border-radius: 8px !important;
+            margin: 16px 0 !important;
+            white-space: pre-wrap !important;
+            font-size: 16px !important;
+            line-height: 1.6 !important;
+        }
+
+        .error {
+            background: #fee2e2 !important;
+            color: #dc2626 !important;
+            padding: 16px !important;
+            border-radius: 8px !important;
+            margin: 16px 0 !important;
+        }
+
+        .toast {
+            position: fixed !important;
+            bottom: 32px !important;
+            right: 32px !important;
+            background: #059669 !important;
+            color: white !important;
+            padding: 16px 32px !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Dark mode styles */
+        html.dark .card {
+            background: #1f2937 !important;
+            border-color: #374151 !important;
+        }
+
+        html.dark textarea {
+            background: #374151 !important;
+            border-color: #4b5563 !important;
+            color: #e5e7eb !important;
+        }
+
+        html.dark .copy-text {
+            background: #374151 !important;
+            color: #e5e7eb !important;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 16px !important;
+                margin: 20px auto !important;
+            }
+
+            .card {
+                padding: 20px !important;
+            }
+
+            .button-group {
+                flex-direction: column !important;
+            }
+
+            .btn {
+                width: 100% !important;
+            }
+        }
+
+        /* Theme toggle styles */
+        #themeToggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        #themeToggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .dark #themeToggle {
+            background-color: #2d2d2d;
+            border-color: #404040;
+        }
+
+        #sunIcon, #moonIcon {
+            width: 24px;
+            height: 24px;
+            color: #2563eb;
+            transition: all 0.3s ease;
+        }
+
+        .dark #sunIcon, .dark #moonIcon {
+            color: #60a5fa;
+        }
+
+        html.dark {
+            color-scheme: dark;
+        }
+
+        html.dark body {
+            background-color: #1a1a1a;
+            color: #e5e5e5;
+        }
+
+        html.dark .template-btn {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        html.dark .template-btn:hover {
+            background-color: #2563eb;
+        }
+
+        html.dark .tone-labels {
+            color: #e5e5e5;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            html:not(.light) {
+                color-scheme: dark;
+            }
+        }
+
+        .action-button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .action-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        html.dark .action-button {
+            background: #3b82f6;
+        }
+        html.dark .action-button[onclick="toggleTheme()"] {
+            background: #374151;
+            color: #60a5fa;
+            border-color: #60a5fa;
+        }
+
+        .theme-button {
+            background: #f3f4f6 !important;
+            color: #2563eb !important;
+            padding: 8px 16px !important;
+            border: 2px solid #2563eb !important;
+            border-radius: 8px !important;
+            cursor: pointer !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin-left: 16px !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            position: static !important;
+            z-index: 9999 !important;
+        }
+
+        html.dark .theme-button {
+            background: #374151 !important;
+            color: #60a5fa !important;
+            border-color: #60a5fa !important;
+        }
+    </style>
+    <link rel="stylesheet" href="/styles.css">
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
-    <div class="container mx-auto px-4 py-8">
-        <header class="text-center mb-8">
-            <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4 animate-title">
-                AI Marketing Copy Generator
-            </h1>
-            <p class="text-sm md:text-base text-gray-600 dark:text-gray-300 animate-subtitle">
-                Generate compelling marketing copy for your products and services using AI
-            </p>
-            <button class="dark-mode-toggle absolute top-4 right-4 p-2 rounded-lg bg-gray-200 dark:bg-gray-700 transition-colors">
-                <svg class="sun w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                </svg>
-                <svg class="moon hidden w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header-container">
+                <h1>AI Marketing Copy Generator</h1>
+                <button id="themeButton" onclick="toggleTheme()" class="theme-button">
+                    Dark Mode
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
                 </svg>
             </button>
-        </header>
+        </div>
+            <p class="subtitle">Generate compelling marketing copy for your products and services using AI</p>
+            
+            <!-- Debug version of template section -->
+            <div class="template-section" style="margin: 20px 0;">
+                <h2>What would you like to generate copy for?</h2>
+                <div style="display: flex !important; flex-wrap: wrap !important; gap: 10px !important; margin: 20px 0 !important; padding: 20px !important; background: #f3f4f6 !important; border-radius: 8px !important;">
+                    <button type="button" 
+                            onclick="selectTemplate('product-launch')"
+                            style="background: #2563eb !important; 
+                                   color: white !important; 
+                                   padding: 12px 24px !important; 
+                                   border: none !important; 
+                                   border-radius: 8px !important; 
+                                   cursor: pointer !important; 
+                                   font-size: 16px !important; 
+                                   font-weight: 500 !important; 
+                                   min-width: 180px !important;
+                                   display: inline-block !important;
+                                   opacity: 1 !important;
+                                   visibility: visible !important;
+                                   position: static !important;
+                                   z-index: 9999 !important;">
+                        Product Launch
+                    </button>
+                    <button type="button" 
+                            onclick="selectTemplate('service-promotion')"
+                            style="background: #2563eb !important; 
+                                   color: white !important; 
+                                   padding: 12px 24px !important; 
+                                   border: none !important; 
+                                   border-radius: 8px !important; 
+                                   cursor: pointer !important; 
+                                   font-size: 16px !important; 
+                                   font-weight: 500 !important; 
+                                   min-width: 180px !important;
+                                   display: inline-block !important;
+                                   opacity: 1 !important;
+                                   visibility: visible !important;
+                                   position: static !important;
+                                   z-index: 9999 !important;">
+                        Service Promotion
+                    </button>
+                    <button type="button" 
+                            onclick="selectTemplate('social-media')"
+                            style="background: #2563eb !important; 
+                                   color: white !important; 
+                                   padding: 12px 24px !important; 
+                                   border: none !important; 
+                                   border-radius: 8px !important; 
+                                   cursor: pointer !important; 
+                                   font-size: 16px !important; 
+                                   font-weight: 500 !important; 
+                                   min-width: 180px !important;
+                                   display: inline-block !important;
+                                   opacity: 1 !important;
+                                   visibility: visible !important;
+                                   position: static !important;
+                                   z-index: 9999 !important;">
+                        Social Media Post
+                    </button>
+                    <button type="button" 
+                            onclick="selectTemplate('email')"
+                            style="background: #2563eb !important; 
+                                   color: white !important; 
+                                   padding: 12px 24px !important; 
+                                   border: none !important; 
+                                   border-radius: 8px !important; 
+                                   cursor: pointer !important; 
+                                   font-size: 16px !important; 
+                                   font-weight: 500 !important; 
+                                   min-width: 180px !important;
+                                   display: inline-block !important;
+                                   opacity: 1 !important;
+                                   visibility: visible !important;
+                                   position: static !important;
+                                   z-index: 9999 !important;">
+                        Email Campaign
+                    </button>
+                                </div>
+                            </div>
 
-        <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 md:p-6">
-                    <textarea id="prompt" rows="4" 
-                        class="w-full p-3 text-sm md:text-base border rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        placeholder="What would you like to generate copy for?"></textarea>
-                    
-                    <div class="mt-4 space-y-4">
-                        <div class="flex flex-wrap gap-2">
-                            <button onclick="useTemplate('product')" class="template-btn px-3 py-2 text-xs md:text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors">
-                                Product Launch
-                            </button>
-                            <button onclick="useTemplate('service')" class="template-btn px-3 py-2 text-xs md:text-sm bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-800 transition-colors">
-                                Service Promotion
-                            </button>
-                            <button onclick="useTemplate('social')" class="template-btn px-3 py-2 text-xs md:text-sm bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors">
-                                Social Media Post
-                            </button>
-                            <button onclick="useTemplate('email')" class="template-btn px-3 py-2 text-xs md:text-sm bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-800 transition-colors">
-                                Email Campaign
-                            </button>
+            <form id="copyForm" role="form" aria-label="Marketing copy generation form" onsubmit="handleSubmit(event)">
+                <div class="form-group">
+                    <label for="prompt">Marketing Brief</label>
+                    <textarea id="prompt" name="prompt" rows="4" required
+                              placeholder="Enter your prompt here... For example: Write a compelling marketing copy for a new AI-powered smartwatch that focuses on health tracking and productivity features."
+                              aria-required="true"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="tone">Tone</label>
+                    <div class="slider-container">
+                        <input type="range" id="tone" name="tone" min="0" max="100" value="50" 
+                               class="tone-slider" oninput="updateToneValue(this.value)">
+                        <div class="tone-value">50</div>
+                        <div class="tone-labels">
+                            <span>Casual</span>
+                            <span>Neutral</span>
+                            <span>Formal</span>
                         </div>
-
-                        <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tone</label>
-                            <input type="range" id="tone-slider" min="0" max="100" value="50" 
-                                class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer">
-                            <div id="tone-value" class="text-xs text-gray-600 dark:text-gray-400">Current Tone: Neutral</div>
-                        </div>
-
-                        <div class="flex gap-2">
-                            <button id="generateBtn" onclick="generateCopy()" 
-                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm md:text-base px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
-                                <span>Generate Copy</span>
-                                <div id="loadingSpinner" class="hidden animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-white"></div>
-                            </button>
-                            <button id="clearBtn" onclick="clearAll()" 
-                                class="px-4 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                                Clear
-                            </button>
+                        <div class="tone-description" id="toneDescription">
+                            Balanced and professional tone
                         </div>
                     </div>
                 </div>
 
-                <div id="result" class="min-h-[100px]"></div>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary" id="generateBtn">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke-width="2"/>
+                            <path d="M9.5 9a3.5 3.5 0 0 1 5 0" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        Generate Copy
+                    </button>
+                    <button type="reset" class="btn btn-secondary" id="clearBtn">Clear</button>
+                </div>
+            </form>
+
+            <!-- Test Buttons -->
+            <div class="test-buttons-container">
+                <button class="test-btn test-btn-primary">Generate Copy</button>
+                <button class="test-btn test-btn-secondary">Clear</button>
             </div>
 
-            <aside class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 md:p-6 h-fit">
-                <h2 class="text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-4">History</h2>
-                <div id="historyList" class="space-y-3"></div>
-            </aside>
-        </main>
+            <div id="loading" class="loading hidden" role="status" aria-live="polite">
+                <div class="spinner"></div>
+                <p>Generating your copy...</p>
+            </div>
+
+            <div id="result" class="result hidden" role="region" aria-live="polite">
+                <h2>Generated Copy:</h2>
+                <div id="copyText" class="copy-text"></div>
+                <button onclick="copyToClipboard()" class="btn btn-secondary copy-btn">
+                    Copy to Clipboard
+                </button>
+            </div>
+
+            <div id="error" class="error hidden" role="alert" aria-live="assertive"></div>
+        </div>
     </div>
 
-    <script src="scripts.js"></script>
+    <script>
+        // Add this at the start of your script section
+        const themeToggle = document.getElementById('themeToggle');
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+
+        // Check for saved theme preference or default to light
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.className = savedTheme;
+        updateThemeIcons(savedTheme);
+
+        function updateThemeIcons(theme) {
+            if (theme === 'dark') {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const html = document.documentElement;
+            const currentTheme = html.className;
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.className = newTheme;
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcons(newTheme);
+        });
+
+        // Form submission handling
+        async function handleSubmit(event) {
+            event.preventDefault(); // Prevent form from submitting normally
+            
+            const prompt = document.getElementById('prompt').value.trim();
+            const tone = document.getElementById('tone').value;
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const error = document.getElementById('error');
+            const copyText = document.getElementById('copyText');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            if (!prompt) {
+                error.textContent = 'Please enter a prompt';
+                error.classList.remove('hidden');
+                return;
+            }
+
+            // Disable the generate button and show loading
+            generateBtn.disabled = true;
+            loading.classList.remove('hidden');
+            result.classList.add('hidden');
+            error.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        tone: parseInt(tone)
+                    })
+                });
+
+                const data = await response.json();
+                
+                loading.classList.add('hidden');
+                generateBtn.disabled = false;
+
+                if (data.success && data.text) {
+                    result.classList.remove('hidden');
+                    copyText.textContent = data.text;
+                    copyText.focus();
+                } else {
+                    throw new Error(data.error || 'Failed to generate copy');
+                }
+            } catch (err) {
+                loading.classList.add('hidden');
+                generateBtn.disabled = false;
+                error.classList.remove('hidden');
+                error.textContent = err.message || 'An error occurred while generating copy';
+                console.error('Generation error:', err);
+            }
+        }
+
+        // Clear form handler
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('prompt').value = '';
+            document.getElementById('tone').value = 50;
+        });
+
+        // Copy to clipboard functionality
+        async function copyToClipboard() {
+            const copyText = document.getElementById('copyText');
+            try {
+                await navigator.clipboard.writeText(copyText.textContent);
+                
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = 'Copied to clipboard!';
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+                const error = document.getElementById('error');
+                error.textContent = 'Failed to copy text to clipboard';
+                error.classList.remove('hidden');
+            }
+        }
+
+        // Template selection handler
+        function selectTemplate(type) {
+            const templates = {
+                'product-launch': 'Write a compelling product launch announcement for [product name]. Highlight its key features, unique selling points, and the problems it solves. Target audience: [describe audience]. Include a strong call to action.',
+                'service-promotion': 'Create promotional copy for [service name]. Emphasize the benefits, value proposition, and how it stands out from competitors. Include testimonials or social proof elements and a clear next step for interested customers.',
+                'social-media': 'Write an engaging social media post about [topic/product/service]. Keep it concise, conversational, and shareable. Include relevant hashtags and a compelling call to action.',
+                'email': 'Compose an email campaign for [purpose]. Include an attention-grabbing subject line, personalized greeting, compelling body content, and clear call-to-action. Focus on building relationship and driving engagement.'
+            };
+
+            const prompt = document.getElementById('prompt');
+            if (prompt && templates[type]) {
+                prompt.value = templates[type];
+                prompt.focus();
+                
+                const bracketPos = prompt.value.indexOf('[');
+                if (bracketPos > -1) {
+                    prompt.setSelectionRange(bracketPos, bracketPos + 1);
+                }
+            }
+        }
+
+        // Add this function to your existing scripts
+        function updateToneValue(value) {
+            const toneValue = document.querySelector('.tone-value');
+            const toneDescription = document.getElementById('toneDescription');
+            toneValue.textContent = value;
+            
+            // Update the position of the value indicator
+            const slider = document.querySelector('.tone-slider');
+            const percent = (value - slider.min) / (slider.max - slider.min) * 100;
+            toneValue.style.left = `${percent}%`;
+            
+            // Update the tone description
+            if (value < 33) {
+                toneDescription.textContent = 'Friendly and conversational tone, perfect for social media and casual communications';
+            } else if (value < 66) {
+                toneDescription.textContent = 'Balanced and professional tone, suitable for most business communications';
+            } else {
+                toneDescription.textContent = 'Formal and sophisticated tone, ideal for official documents and corporate communications';
+            }
+        }
+
+        // Initialize the tone value on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateToneValue(50); // Set initial value
+        });
+    </script>
 </body>
 </html>
