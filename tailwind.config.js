@@ -3,6 +3,20 @@ module.exports = {
   content: ["./public/**/*.{html,js}"],
   darkMode: 'class',
   theme: {
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: '1rem',
+        sm: '2rem',
+        lg: '4rem'
+      },
+      screens: {
+        sm: '640px',
+        md: '768px',
+        lg: '1024px',
+        xl: '1280px'
+      }
+    },
     extend: {
       colors: {
         primary: {
@@ -17,6 +31,11 @@ module.exports = {
           800: '#0b2e5d',
           900: '#05172e',
         }
+      },
+      spacing: {
+        '72': '18rem',
+        '84': '21rem',
+        '96': '24rem',
       }
     }
   },
