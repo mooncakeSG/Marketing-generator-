@@ -1,14 +1,13 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const axios = require('axios');
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
 
-// AI21 API configuration
-const AI21_API_KEY = '53042945-3033-43d0-b7c4-a5a5696fbd34';
-
+// Middleware
 app.use(express.static('public'));
 app.use(express.json());
 app.use(cors());
@@ -22,6 +21,11 @@ app.get('/', (req, res) => {
 app.post('/api/generate', async (req, res) => {
     try {
         const { prompt, tone } = req.body;
+        
+        // Check if API key is configured
+        if (!process.env.AI21_API_KEY) {
+            throw new Error('AI21 API key not configured. Please set the AI21_API_KEY environment variable.');
+        }
         
         // Construct the system prompt based on tone
         let toneInstruction = '';
@@ -55,7 +59,7 @@ app.post('/api/generate', async (req, res) => {
             response_format: { type: 'text' }
         }, {
             headers: {
-                'Authorization': `Bearer ${AI21_API_KEY}`,
+                'Authorization': `Bearer ${process.env.AI21_API_KEY}`,
                 'Content-Type': 'application/json'
             }
         });
@@ -78,6 +82,13 @@ app.post('/api/generate', async (req, res) => {
             details: error.response?.data?.detail || error.message
         });
     }
+});
+
+// Error handling for uncaught exceptions
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    // Perform any necessary cleanup here
+    process.exit(1);
 });
 
 app.listen(port, () => {
