@@ -89,21 +89,19 @@ app.post('/api/generate', async (req, res) => {
         const enhancedPrompt = `Generate marketing copy in a ${toneDescription} tone. ${prompt}`;
 
         const data = {
-            model: "jamba-large-1.6",
+            model: "j2-ultra",  // Using j2-ultra for better marketing copy
             messages: [
+                {
+                    role: "system",
+                    content: "You are a professional marketing copywriter skilled in creating compelling and persuasive content."
+                },
                 {
                     role: "user",
                     content: enhancedPrompt
                 }
             ],
-            documents: [],
-            tools: [],
-            n: 1,
-            max_tokens: 2048,
-            temperature: 0.4,
-            top_p: 1,
-            stop: [],
-            response_format: { type: "text" }
+            temperature: 0.7,
+            maxTokens: 500
         };
 
         console.log('Sending request to AI21 with data:', data);
@@ -119,11 +117,15 @@ app.post('/api/generate', async (req, res) => {
 
         console.log('Received response from AI21:', response.data);
         
+        if (!response.data || !response.data.completions || !response.data.completions[0]) {
+            throw new Error('Invalid response from AI21');
+        }
+
         // Format the response to match what the frontend expects
         const formattedResponse = {
             choices: [{
                 message: {
-                    content: response.data.output?.text || response.data.completions?.[0]?.text || response.data.text || ''
+                    content: response.data.completions[0].text.trim()
                 }
             }]
         };
@@ -139,7 +141,7 @@ app.post('/api/generate', async (req, res) => {
         console.error('Error in /api/generate:', error.response?.data || error.message);
         res.status(500).json({
             error: 'Failed to generate marketing copy',
-            details: error.response?.data?.message || error.response?.data || error.message
+            details: error.message
         });
     }
 });

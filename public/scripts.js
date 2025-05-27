@@ -8,6 +8,7 @@ const toneValue = document.getElementById('tone-value');
 const darkModeToggle = document.querySelector('.dark-mode-toggle');
 const sunIcon = document.querySelector('.sun');
 const moonIcon = document.querySelector('.moon');
+const loadingSpinner = document.getElementById('loadingSpinner');
 
 // Mock history data
 let mockHistory = [
@@ -166,8 +167,7 @@ async function generateCopy() {
         clearBtn.disabled = true;
 
         // Show loading spinner
-        const spinner = document.getElementById('loadingSpinner');
-        spinner.classList.remove('hidden');
+        loadingSpinner.classList.remove('hidden');
 
         console.log('Sending request with prompt:', prompt);
         const response = await fetch('/api/generate', {
@@ -185,7 +185,7 @@ async function generateCopy() {
         console.log('Received API response:', data);
 
         // Hide spinner
-        spinner.classList.add('hidden');
+        loadingSpinner.classList.add('hidden');
 
         if (!response.ok) {
             throw new Error(data.error || data.details || 'Failed to generate content');
@@ -201,7 +201,7 @@ async function generateCopy() {
 
         // Update result area with the generated text
         resultDiv.innerHTML = `
-            <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
                 <div class="text-gray-900 dark:text-white whitespace-pre-wrap mb-4">${generatedText}</div>
                 <button onclick="copyToClipboard(this)" class="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -244,7 +244,7 @@ async function generateCopy() {
     } finally {
         generateBtn.disabled = false;
         clearBtn.disabled = false;
-        spinner.classList.add('hidden');
+        loadingSpinner.classList.add('hidden');
     }
 }
 
