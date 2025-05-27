@@ -3,8 +3,8 @@ const generateBtn = document.getElementById('generateBtn');
 const clearBtn = document.getElementById('clearBtn');
 const promptInput = document.getElementById('prompt');
 const resultDiv = document.getElementById('result');
-const toneSlider = document.getElementById('tone');
-const toneValue = document.getElementById('toneValue');
+const toneSlider = document.getElementById('tone-slider');
+const toneValue = document.getElementById('tone-value');
 const darkModeToggle = document.querySelector('.dark-mode-toggle');
 const sunIcon = document.querySelector('.sun');
 const moonIcon = document.querySelector('.moon');
@@ -30,84 +30,38 @@ function initializeAnimations() {
     gsap.to('body', { opacity: 1, duration: 0.5 });
 
     // Header animation
-    gsap.to('.header', { 
-        opacity: 1, 
-        y: 0, 
-        duration: 1, 
-        ease: 'power3.out' 
+    gsap.from('header', { 
+        y: -50,
+        opacity: 0,
+        duration: 1,
+        ease: 'power3.out'
     });
 
-    // Dark mode toggle
-    gsap.to('.dark-mode-toggle', { 
-        opacity: 1, 
-        duration: 0.5, 
-        delay: 0.2 
-    });
-
-    // Mascot animation
-    gsap.to('.mascot', {
-        opacity: 1,
-        y: 0,
+    // Main content animation
+    gsap.from('main > div', {
+        y: 30,
+        opacity: 0,
         duration: 1,
         delay: 0.3,
         ease: 'power3.out'
     });
 
-    // Continuous mascot float animation
-    gsap.to('.mascot', {
-        y: '+=10',
-        rotation: 5,
-        duration: 2,
-        repeat: -1,
-        yoyo: true,
-        ease: 'power1.inOut'
-    });
-
-    // Card animation
-    gsap.to('.card', {
-        opacity: 1,
-        y: 0,
-        duration: 1,
-        delay: 0.4,
-        ease: 'power3.out'
-    });
-
     // Template buttons animation
-    gsap.to('.template-btn', {
-        opacity: 1,
-        scale: 1,
+    gsap.from('.template-btn', {
+        scale: 0.9,
+        opacity: 0,
         duration: 0.5,
         stagger: 0.1,
         delay: 0.6,
         ease: 'back.out(1.7)'
     });
 
-    // Tone control animation
-    gsap.to('.tone-control', {
-        opacity: 1,
-        y: 0,
+    // History panel animation
+    gsap.from('aside', {
+        x: 30,
+        opacity: 0,
         duration: 1,
-        delay: 0.7,
-        ease: 'power3.out'
-    });
-
-    // Button group animation
-    gsap.to('button:not(.template-btn)', {
-        opacity: 1,
-        y: 0,
-        duration: 0.5,
-        stagger: 0.1,
         delay: 0.8,
-        ease: 'power3.out'
-    });
-
-    // History panel items animation
-    gsap.to('.history-item', {
-        opacity: 1,
-        x: 0,
-        duration: 0.5,
-        stagger: 0.1,
-        delay: 1,
         ease: 'power3.out'
     });
 }
@@ -116,16 +70,16 @@ function initializeAnimations() {
 function populateHistory() {
     const historyList = document.getElementById('historyList');
     historyList.innerHTML = mockHistory.map(item => `
-        <div class="history-item">
-            <strong>${item.type}</strong>
-            <p>${item.content.substring(0, 100)}...</p>
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 shadow-sm transition-all hover:shadow-md">
+            <div class="font-medium text-gray-900 dark:text-white mb-1">${item.type}</div>
+            <p class="text-sm text-gray-600 dark:text-gray-300">${item.content.substring(0, 100)}...</p>
         </div>
     `).join('');
 
     // Animate new history items
     gsap.from('.history-item', {
-        opacity: 0,
         x: 20,
+        opacity: 0,
         duration: 0.5,
         stagger: 0.1,
         ease: 'power3.out'
@@ -141,40 +95,28 @@ toneSlider.addEventListener('input', () => {
     else if (value <= 66) tone = 'Neutral';
     else tone = 'Formal';
     
+    // Update tone value display
+    toneValue.textContent = `Current Tone: ${tone}`;
+    
     // Animate tone value change
-    gsap.to(toneValue, {
+    gsap.from(toneValue, {
+        y: -10,
         opacity: 0,
-        duration: 0.2,
-        onComplete: () => {
-            toneValue.textContent = tone;
-            gsap.to(toneValue, {
-                opacity: 1,
-                duration: 0.2
-            });
-        }
+        duration: 0.3,
+        ease: 'power2.out'
     });
 });
 
 // Dark mode toggle
 function toggleDarkMode() {
-    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    const isDark = document.body.classList.toggle('dark');
+    sunIcon.classList.toggle('hidden');
+    moonIcon.classList.toggle('hidden');
     
-    // Fade out
+    // Animate transition
     gsap.to('body', {
-        opacity: 0,
-        duration: 0.2,
-        onComplete: () => {
-            // Toggle theme
-            document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
-            sunIcon.style.display = isDark ? 'block' : 'none';
-            moonIcon.style.display = isDark ? 'none' : 'block';
-            
-            // Fade in
-            gsap.to('body', {
-                opacity: 1,
-                duration: 0.2
-            });
-        }
+        backgroundColor: isDark ? '#111827' : '#f9fafb',
+        duration: 0.3
     });
 }
 
@@ -195,16 +137,6 @@ document.querySelectorAll('button').forEach(button => {
             ease: 'power2.out'
         });
     });
-
-    button.addEventListener('click', () => {
-        gsap.to(button, {
-            scale: 0.95,
-            duration: 0.1,
-            yoyo: true,
-            repeat: 1,
-            ease: 'power2.out'
-        });
-    });
 });
 
 // Template selection
@@ -222,7 +154,10 @@ function useTemplate(type) {
 async function generateCopy() {
     const prompt = promptInput.value.trim();
     if (!prompt) {
-        resultDiv.innerHTML = '<div class="error">Please enter a prompt</div>';
+        resultDiv.innerHTML = `
+            <div class="bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 p-4 rounded-lg">
+                Please enter a prompt
+            </div>`;
         return;
     }
 
@@ -230,16 +165,9 @@ async function generateCopy() {
         generateBtn.disabled = true;
         clearBtn.disabled = true;
 
-        // Show and animate spinner
+        // Show loading spinner
         const spinner = document.getElementById('loadingSpinner');
-        spinner.style.display = 'block';
-        gsap.to(spinner, {
-            opacity: 1,
-            duration: 0.3,
-            onStart: () => {
-                spinner.style.animation = 'spin 1s linear infinite';
-            }
-        });
+        spinner.classList.remove('hidden');
 
         const response = await fetch('/api/generate', {
             method: 'POST',
@@ -259,35 +187,22 @@ async function generateCopy() {
         const data = await response.json();
 
         // Hide spinner
-        gsap.to(spinner, {
-            opacity: 0,
-            duration: 0.3,
-            onComplete: () => {
-                spinner.style.display = 'none';
-                spinner.style.animation = 'none';
-            }
-        });
+        spinner.classList.add('hidden');
 
         if (data.choices && data.choices[0]) {
             const generatedText = data.choices[0].message.content;
             
             resultDiv.innerHTML = `
-                <div class="result-card">${generatedText}</div>
-                <button onclick="copyToClipboard()" class="copy-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
-                    </svg>
-                    Copy to Clipboard
-                </button>`;
-
-            // Animate result card
-            gsap.from('.result-card', {
-                opacity: 0,
-                y: 20,
-                duration: 0.5,
-                ease: 'power3.out'
-            });
+                <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+                    <p class="text-gray-900 dark:text-white whitespace-pre-wrap">${generatedText}</p>
+                    <button onclick="copyToClipboard()" class="mt-4 px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                        </svg>
+                        Copy to Clipboard
+                    </button>
+                </div>`;
 
             // Add to history
             mockHistory.unshift({
@@ -296,13 +211,25 @@ async function generateCopy() {
             });
             populateHistory();
 
+            // Animate result
+            gsap.from('.result-card', {
+                y: 20,
+                opacity: 0,
+                duration: 0.5,
+                ease: 'power3.out'
+            });
+
         } else if (data.error) {
-            resultDiv.innerHTML = '<div class="error">Error: ' + data.error + '</div>';
-        } else {
-            resultDiv.innerHTML = '<div class="error">No response generated</div>';
+            resultDiv.innerHTML = `
+                <div class="bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 p-4 rounded-lg">
+                    Error: ${data.error}
+                </div>`;
         }
     } catch (error) {
-        resultDiv.innerHTML = '<div class="error">Error generating copy: ' + error.message + '</div>';
+        resultDiv.innerHTML = `
+            <div class="bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 p-4 rounded-lg">
+                Error generating copy: ${error.message}
+            </div>`;
         console.error('Error:', error);
     } finally {
         generateBtn.disabled = false;
@@ -325,9 +252,12 @@ async function copyToClipboard() {
             await navigator.clipboard.writeText(resultCard.textContent);
             const copyBtn = document.querySelector('.copy-btn');
             const originalText = copyBtn.innerHTML;
-            copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Copied!';
+            copyBtn.innerHTML = `
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 6L9 17l-5-5"/>
+                </svg>
+                Copied!`;
             
-            // Animate copy button
             gsap.from(copyBtn, {
                 scale: 0.9,
                 duration: 0.3,

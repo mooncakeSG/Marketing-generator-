@@ -8,7 +8,8 @@
   },
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "build:css": "tailwindcss -i ./public/styles.css -o ./public/tailwind.css --watch"
   },
   "keywords": [
     "ai",
@@ -26,6 +27,9 @@
     "express": "^4.18.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.3"
+    "autoprefixer": "^10.4.17",
+    "nodemon": "^3.0.3",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1"
   }
 }
