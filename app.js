@@ -30,8 +30,14 @@ app.use((req, res, next) => {
 });
 
 // AI21 Configuration
-const AI21_API_KEY = "2d121793-39d1-4ff0-8b30-94a06c50fb7f";
+const AI21_API_KEY = process.env.AI21_API_KEY;
 const AI21_API_URL = "https://api.ai21.com/studio/v1/chat/completions";
+
+// Add validation for API key
+if (!AI21_API_KEY) {
+    console.error('AI21_API_KEY is not set in environment variables');
+    process.exit(1);
+}
 
 // Test the AI21 connection on startup
 async function testAI21Connection() {
@@ -112,7 +118,17 @@ app.post('/api/generate', async (req, res) => {
         });
 
         console.log('Received response from AI21:', response.data);
-        res.json(response.data);
+        
+        // Format the response to match what the frontend expects
+        const formattedResponse = {
+            choices: [{
+                message: {
+                    content: response.data.output?.text || response.data.completions[0]?.data?.text || response.data.text || ''
+                }
+            }]
+        };
+        
+        res.json(formattedResponse);
     } catch (error) {
         console.error('Error in /api/generate:', error.response?.data || error.message);
         res.status(500).json({

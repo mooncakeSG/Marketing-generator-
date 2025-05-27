@@ -169,6 +169,7 @@ async function generateCopy() {
         const spinner = document.getElementById('loadingSpinner');
         spinner.classList.remove('hidden');
 
+        console.log('Sending request with prompt:', prompt);
         const response = await fetch('/api/generate', {
             method: 'POST',
             headers: {
@@ -185,7 +186,7 @@ async function generateCopy() {
         }
 
         const data = await response.json();
-        console.log('API Response:', data); // Debug log
+        console.log('Received API response:', data);
 
         // Hide spinner
         spinner.classList.add('hidden');
@@ -194,12 +195,9 @@ async function generateCopy() {
         let generatedText = '';
         if (data.choices && data.choices[0] && data.choices[0].message) {
             generatedText = data.choices[0].message.content;
-        } else if (data.completions && data.completions[0]) {
-            generatedText = data.completions[0].data.text;
-        } else if (typeof data === 'string') {
-            generatedText = data;
+            console.log('Extracted generated text:', generatedText);
         } else {
-            console.log('Unexpected response format:', data);
+            console.error('Unexpected response format:', data);
             throw new Error('Unexpected response format from server');
         }
 
