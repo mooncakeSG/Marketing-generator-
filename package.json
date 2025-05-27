@@ -1,16 +1,28 @@
 {
-  "name": "marketing-copy-generator",
+  "name": "ai-marketing-copy-generator",
   "version": "1.0.0",
-  "description": "Marketing copy generator using AI21",
+  "description": "A modern web application that generates marketing copy using AI21's language model",
   "main": "app.js",
   "scripts": {
-    "dev": "node app.js",
-    "test": "node test.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js"
   },
+  "keywords": [
+    "ai",
+    "marketing",
+    "copywriting",
+    "ai21",
+    "express",
+    "gsap"
+  ],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
-    "dotenv": "^16.3.1",
-    "node-fetch": "^3.3.2"
+    "axios": "^1.6.7",
+    "dotenv": "^16.4.1",
+    "express": "^4.18.2"
   },
-  "type": "module"
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  }
 }
