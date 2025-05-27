@@ -185,18 +185,30 @@ async function generateCopy() {
         }
 
         const data = await response.json();
+        console.log('API Response:', data); // Debug log
 
         // Hide spinner
         spinner.classList.add('hidden');
 
-        if (data.choices && data.choices[0]) {
-            const generatedText = data.choices[0].message.content;
-            
-            // Update result area
+        // Extract the generated text from the response
+        let generatedText = '';
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+            generatedText = data.choices[0].message.content;
+        } else if (data.completions && data.completions[0]) {
+            generatedText = data.completions[0].data.text;
+        } else if (typeof data === 'string') {
+            generatedText = data;
+        } else {
+            console.log('Unexpected response format:', data);
+            throw new Error('Unexpected response format from server');
+        }
+
+        if (generatedText) {
+            // Update result area with the generated text
             resultDiv.innerHTML = `
                 <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
-                    <p class="text-gray-900 dark:text-white whitespace-pre-wrap">${generatedText}</p>
-                    <button onclick="copyToClipboard(this)" class="mt-4 px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
+                    <div class="text-gray-900 dark:text-white whitespace-pre-wrap mb-4">${generatedText}</div>
+                    <button onclick="copyToClipboard(this)" class="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
                             <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
@@ -226,19 +238,13 @@ async function generateCopy() {
                 duration: 0.5,
                 ease: 'power3.out'
             });
-
-        } else if (data.error) {
-            resultDiv.innerHTML = `
-                <div class="bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 p-4 rounded-lg">
-                    Error: ${data.error}
-                </div>`;
         }
     } catch (error) {
+        console.error('Error details:', error);
         resultDiv.innerHTML = `
             <div class="bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 p-4 rounded-lg">
                 Error generating copy: ${error.message}
             </div>`;
-        console.error('Error:', error);
     } finally {
         generateBtn.disabled = false;
         clearBtn.disabled = false;
@@ -254,7 +260,7 @@ function clearAll() {
 
 // Copy to clipboard function
 async function copyToClipboard(button) {
-    const textToCopy = button.parentElement.querySelector('p').textContent;
+    const textToCopy = button.parentElement.querySelector('div').textContent;
     try {
         await navigator.clipboard.writeText(textToCopy);
         const originalText = button.innerHTML;
