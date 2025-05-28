@@ -4,10 +4,31 @@
 
 The AI Marketing Copy Generator provides a simple REST API for generating marketing content. This document outlines the available endpoints, request/response formats, and usage examples.
 
-## Base URL
+## AI21 Integration
+
+The application uses AI21's Jurassic-2 Large language model for generating high-quality marketing copy. The integration is configured with the following parameters:
+
+```json
+{
+    "temperature": 0.7,    // Controls creativity vs consistency
+    "maxTokens": 500,      // Maximum length of generated content
+    "topP": 0.9,          // Nucleus sampling parameter
+    "stopSequences": ["\n\n", "###"]  // Sequence markers to stop generation
+}
+```
+
+### AI21 API Requirements
+
+- An AI21 API key is required (set in `.env` file as `AI21_API_KEY`)
+- API Base URL: `https://api.ai21.com/studio/v1/j2-large/complete`
+- Rate Limit: 60 requests per minute
+- Pricing: Based on AI21's token usage pricing (see [AI21 pricing](https://www.ai21.com/pricing))
+
+## Base URLs
 
 ```
-http://localhost:3001/api
+Local Development: http://localhost:3001/api
+AI21 Endpoint: https://api.ai21.com/studio/v1/j2-large/complete
 ```
 
 ## Endpoints
@@ -112,8 +133,8 @@ The API uses standard HTTP response codes:
 
 - 200: Success
 - 400: Bad Request
-- 401: Unauthorized
-- 429: Too Many Requests
+- 401: Unauthorized (Invalid AI21 API key)
+- 429: Too Many Requests (AI21 rate limit exceeded)
 - 500: Server Error
 
 Error responses include a message:
@@ -125,9 +146,31 @@ Error responses include a message:
 }
 ```
 
+### AI21-Specific Errors
+
+The following errors may occur specifically from the AI21 API:
+
+- 401: Invalid API key or authentication failure
+- 429: Rate limit exceeded (60 requests/minute)
+- 400: Invalid request parameters (e.g., invalid temperature value)
+- 500: AI21 service error
+
+AI21 error response format:
+
+```json
+{
+    "error": {
+        "type": "string",
+        "message": "string",
+        "code": "string"
+    }
+}
+```
+
 ## Rate Limiting
 
-- 60 requests per minute per IP
+- Local API: 60 requests per minute per IP
+- AI21 API: 60 requests per minute per API key
 - Exceeded limits return 429 status code
 
 ## Best Practices
