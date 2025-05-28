@@ -2,7 +2,7 @@
 
 A modern web application that generates high-quality marketing copy using AI. Built with modern web technologies and best practices in prompt engineering.
 
-![AI Marketing Copy Generator](https://i.ibb.co/rRL0cQKf/20250528-localhost-iphone11proxxs-4.png)(https://i.ibb.co/x85Dw1jd/20250528-localhost-iphone11proxxs-3.png)
+![AI Marketing Copy Generator](https://i.ibb.co/rRL0cQKf/20250528-localhost-iphone11proxxs-4.png) (https://i.ibb.co/x85Dw1jd/20250528-localhost-iphone11proxxs-3.png)
 
 ## Features
 
