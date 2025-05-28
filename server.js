@@ -125,6 +125,34 @@ app.get('/api/stats', async (req, res) => {
     }
 });
 
+// Test endpoint to verify token tracker initialization
+app.get('/api/test-tracker', async (req, res) => {
+    try {
+        if (!tokenTracker) {
+            return res.status(500).json({ 
+                error: 'Token tracker not initialized',
+                reason: 'Configuration missing or invalid'
+            });
+        }
+
+        // Test sheet access
+        await tokenTracker.sheet.loadCells('A1:A2');
+        
+        res.json({ 
+            status: 'success',
+            message: 'Token tracker initialized and working',
+            sheetTitle: tokenTracker.doc.title,
+            sheetId: process.env.GOOGLE_SHEETS_ID
+        });
+    } catch (error) {
+        console.error('Token tracker test failed:', error);
+        res.status(500).json({ 
+            error: 'Token tracker test failed',
+            details: error.message
+        });
+    }
+});
+
 // Error handling for uncaught exceptions
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
