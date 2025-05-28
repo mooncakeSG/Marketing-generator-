@@ -2,30 +2,41 @@
 export function updateToneValue(value) {
     const toneValue = document.querySelector('.tone-value');
     const toneDescription = document.getElementById('toneDescription');
-    toneValue.textContent = value;
+    if (toneValue) {
+        toneValue.textContent = value;
+    }
 
     // Update tone description
-    if (value < 33) {
-        toneDescription.textContent = 'Casual and conversational tone';
-    } else if (value < 66) {
-        toneDescription.textContent = 'Balanced and professional tone';
-    } else {
-        toneDescription.textContent = 'Formal and corporate tone';
+    if (toneDescription) {
+        if (value < 33) {
+            toneDescription.textContent = 'Casual and conversational tone';
+        } else if (value < 66) {
+            toneDescription.textContent = 'Balanced and professional tone';
+        } else {
+            toneDescription.textContent = 'Formal and corporate tone';
+        }
     }
 }
 
 export function copyToClipboard() {
     const copyText = document.getElementById('copyText');
-    const textToCopy = copyText.innerText;
+    if (!copyText || !copyText.textContent.trim()) {
+        showError('No content to copy');
+        return;
+    }
+
+    const textToCopy = copyText.textContent;
     
     navigator.clipboard.writeText(textToCopy).then(() => {
         // Show success message
-        const btn = document.querySelector('button[onclick="copyToClipboard()"]');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-        setTimeout(() => {
-            btn.innerHTML = originalText;
-        }, 2000);
+        const btn = document.querySelector('button[onclick="window.copyToClipboard()"]');
+        if (btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+            }, 2000);
+        }
     }).catch(err => {
         console.error('Failed to copy text:', err);
         showError('Failed to copy text to clipboard');
@@ -34,25 +45,35 @@ export function copyToClipboard() {
 
 export function showError(message) {
     const error = document.getElementById('error');
-    error.textContent = message;
-    error.classList.remove('hidden');
+    if (error) {
+        error.textContent = message;
+        error.classList.remove('hidden');
+    }
 }
 
 export function hideError() {
     const error = document.getElementById('error');
-    error.classList.add('hidden');
+    if (error) {
+        error.classList.add('hidden');
+    }
 }
 
 export function showLoading() {
     const loading = document.getElementById('loading');
     const result = document.getElementById('result');
-    loading.classList.remove('hidden');
-    result.classList.add('hidden');
+    if (loading) {
+        loading.classList.remove('hidden');
+    }
+    if (result) {
+        result.classList.add('hidden');
+    }
 }
 
 export function hideLoading() {
     const loading = document.getElementById('loading');
-    loading.classList.add('hidden');
+    if (loading) {
+        loading.classList.add('hidden');
+    }
 }
 
 export function updateResult(content) {
@@ -60,16 +81,35 @@ export function updateResult(content) {
     const copyText = document.getElementById('copyText');
     const loading = document.getElementById('loading');
     
-    loading.classList.add('hidden');
-    result.classList.remove('hidden');
-    copyText.innerHTML = content.split('\n').map(line => `<p>${line}</p>`).join('');
+    if (loading) {
+        loading.classList.add('hidden');
+    }
+    if (result) {
+        result.classList.remove('hidden');
+    }
+    if (copyText) {
+        copyText.innerHTML = content.split('\n').map(line => `<p>${line}</p>`).join('');
+    }
 }
 
 export function clearForm() {
-    document.getElementById('copyForm').reset();
-    document.getElementById('result').classList.add('hidden');
-    document.getElementById('error').classList.add('hidden');
-    document.getElementById('loading').classList.add('hidden');
+    const form = document.getElementById('copyForm');
+    const result = document.getElementById('result');
+    const error = document.getElementById('error');
+    const loading = document.getElementById('loading');
+
+    if (form) {
+        form.reset();
+    }
+    if (result) {
+        result.classList.add('hidden');
+    }
+    if (error) {
+        error.classList.add('hidden');
+    }
+    if (loading) {
+        loading.classList.add('hidden');
+    }
     updateToneValue(50); // Reset tone slider to default
 }
 
@@ -78,7 +118,7 @@ export function exportAsText() {
     const copyText = document.getElementById('copyText');
     if (!copyText || !copyText.textContent.trim()) {
         showError('No content to export');
-        return;
+        return Promise.reject(new Error('No content to export'));
     }
 
     const blob = new Blob([copyText.textContent], { type: 'text/plain' });
@@ -90,19 +130,20 @@ export function exportAsText() {
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
+    return Promise.resolve();
 }
 
 export function exportAsPDF() {
     const copyText = document.getElementById('copyText');
     if (!copyText || !copyText.textContent.trim()) {
         showError('No content to export');
-        return;
+        return Promise.reject(new Error('No content to export'));
     }
 
     const { jsPDF } = window.jspdf;
     if (!jsPDF) {
         showError('PDF export functionality not available');
-        return;
+        return Promise.reject(new Error('PDF export functionality not available'));
     }
 
     try {
@@ -113,8 +154,10 @@ export function exportAsPDF() {
         doc.setFontSize(12);
         doc.text(splitText, 15, 15);
         doc.save('marketing-copy.pdf');
+        return Promise.resolve();
     } catch (err) {
         console.error('Failed to export PDF:', err);
         showError('Failed to export as PDF');
+        return Promise.reject(err);
     }
 } 

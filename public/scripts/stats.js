@@ -1,175 +1,101 @@
-// Usage statistics module
+// Statistics tracking module
 
-// Track generation time
-let generationStartTime = 0;
+let startTime = 0;
+let statsData = {
+    generationTime: 0,
+    totalTokens: 0,
+    estimatedCost: 0,
+    totalRequests: 0
+};
 
-// Start timing
-function startTiming() {
-    generationStartTime = performance.now();
+// Start timing the generation process
+export function startTiming() {
+    startTime = performance.now();
 }
 
-// End timing and return duration
-function endTiming() {
-    if (!generationStartTime) return 0;
-    const duration = performance.now() - generationStartTime;
-    generationStartTime = 0;
-    return Math.round(duration);
+// End timing and calculate duration
+export function endTiming() {
+    const endTime = performance.now();
+    statsData.generationTime = ((endTime - startTime) / 1000).toFixed(2); // Convert to seconds
+    return statsData.generationTime;
 }
 
-// Calculate token usage from AI21 response
-function calculateTokenUsage(response) {
-    if (!response || !response.usage) {
-        return {
-            promptTokens: 0,
-            completionTokens: 0,
-            totalTokens: 0
-        };
-    }
+// Calculate token usage from API response
+export function calculateTokenUsage(response) {
+    if (!response || !response.usage) return 0;
+    
+    const promptTokens = response.usage.prompt_tokens || 0;
+    const completionTokens = response.usage.completion_tokens || 0;
+    statsData.totalTokens = promptTokens + completionTokens;
+    
+    // Calculate cost (using typical GPT-3.5-turbo pricing)
+    const promptCost = (promptTokens * 0.0015) / 1000; // $0.0015 per 1K tokens
+    const completionCost = (completionTokens * 0.002) / 1000; // $0.002 per 1K tokens
+    statsData.estimatedCost = (promptCost + completionCost).toFixed(4);
+    
+    return statsData.totalTokens;
+}
 
+// Get current generation statistics
+export function getGenerationStats() {
     return {
-        promptTokens: response.usage.prompt_tokens || 0,
-        completionTokens: response.usage.completion_tokens || 0,
-        totalTokens: response.usage.total_tokens || 0
+        generationTime: statsData.generationTime,
+        totalTokens: statsData.totalTokens,
+        estimatedCost: statsData.estimatedCost
     };
 }
 
-// Format token count
-function formatTokenCount(count) {
-    return count.toLocaleString();
-}
-
-// Calculate estimated cost (based on AI21's pricing)
-function calculateCost(tokenUsage) {
-    const COST_PER_1K_TOKENS = 0.01; // Update this based on actual AI21 pricing
-    return (tokenUsage.totalTokens / 1000) * COST_PER_1K_TOKENS;
-}
-
-// Format cost
-function formatCost(cost) {
-    return `$${cost.toFixed(4)}`;
-}
-
-// Update stats display
-function updateStatsDisplay(stats) {
+// Update the stats display in the UI
+export function updateStatsDisplay(stats = statsData) {
     const statsContainer = document.getElementById('generationStats');
     if (!statsContainer) return;
 
     statsContainer.innerHTML = `
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-value">${stats.duration}ms</div>
+                <div class="stat-value">${stats.generationTime}s</div>
                 <div class="stat-label">Generation Time</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">${formatTokenCount(stats.tokens.totalTokens)}</div>
+                <div class="stat-value">${stats.totalTokens}</div>
                 <div class="stat-label">Total Tokens</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">${formatCost(stats.cost)}</div>
+                <div class="stat-value">$${stats.estimatedCost}</div>
                 <div class="stat-label">Estimated Cost</div>
             </div>
         </div>
     `;
 }
 
-// Get complete stats
-function getGenerationStats(response) {
-    const duration = endTiming();
-    const tokens = calculateTokenUsage(response);
-    const cost = calculateCost(tokens);
-
-    return {
-        duration,
-        tokens,
-        cost
-    };
-}
-
-// Update monthly usage stats
-async function updateUsageStats() {
-    try {
-        const response = await fetch('/api/stats');
-        const stats = await response.json();
-
-        // Update UI elements
-        document.getElementById('totalTokens').textContent = formatTokenCount(stats.totalTokens);
-        document.getElementById('totalCost').textContent = formatCost(stats.totalCost);
-        document.getElementById('totalRequests').textContent = stats.totalRequests;
-    } catch (error) {
-        console.error('Failed to update usage stats:', error);
-    }
-}
-
-// Mock data for development
-let mockStats = {
-    totalTokens: 0,
-    totalCost: 0,
-    totalRequests: 0
-};
-
-// Timing utilities
-let startTime = 0;
-
-export function startTiming() {
-    startTime = Date.now();
-}
-
-export function endTiming() {
-    return Date.now() - startTime;
-}
-
-// Token calculation (mock implementation)
-export function calculateTokenUsage(text) {
-    // Rough estimation: 1 token ≈ 4 characters
-    return Math.ceil(text.length / 4);
-}
-
-// Update stats display
-export function updateStatsDisplay(stats) {
-    document.getElementById('totalTokens').textContent = stats.tokens.toLocaleString();
-    document.getElementById('totalCost').textContent = `$${stats.cost.toFixed(2)}`;
-    document.getElementById('totalRequests').textContent = stats.requests.toLocaleString();
-}
-
-// Get generation statistics
-export function getGenerationStats(response) {
-    const tokens = calculateTokenUsage(response.choices[0].message.content);
-    const cost = tokens * 0.000002; // Mock cost calculation
-    
-    // Update mock stats
-    mockStats.totalTokens += tokens;
-    mockStats.totalCost += cost;
-    mockStats.totalRequests += 1;
-    
-    return {
-        tokens,
-        cost,
-        requests: 1
-    };
-}
-
-// Update usage statistics
+// Update monthly usage statistics
 export async function updateUsageStats() {
     try {
-        // For development, use mock data instead of API call
-        updateStatsDisplay({
-            tokens: mockStats.totalTokens,
-            cost: mockStats.totalCost,
-            requests: mockStats.totalRequests
-        });
-    } catch (err) {
-        console.error('Failed to update usage stats:', err);
-        // Don't throw error to prevent blocking UI
+        statsData.totalRequests++;
+        
+        // Update the monthly stats display
+        const monthlyStatsContainer = document.getElementById('usageStats');
+        if (monthlyStatsContainer) {
+            const totalTokensElement = document.getElementById('totalTokens');
+            const totalCostElement = document.getElementById('totalCost');
+            const totalRequestsElement = document.getElementById('totalRequests');
+
+            if (totalTokensElement) totalTokensElement.textContent = statsData.totalTokens.toLocaleString();
+            if (totalCostElement) totalCostElement.textContent = `$${statsData.estimatedCost}`;
+            if (totalRequestsElement) totalRequestsElement.textContent = statsData.totalRequests.toLocaleString();
+        }
+    } catch (error) {
+        console.error('Error updating usage stats:', error);
     }
 }
 
-// Export functions
-export {
-    startTiming,
-    endTiming,
-    calculateTokenUsage,
-    calculateCost,
-    updateStatsDisplay,
-    getGenerationStats,
-    updateUsageStats
-}; 
+// Reset statistics
+export function resetStats() {
+    statsData = {
+        generationTime: 0,
+        totalTokens: 0,
+        estimatedCost: 0,
+        totalRequests: 0
+    };
+    updateStatsDisplay();
+} 

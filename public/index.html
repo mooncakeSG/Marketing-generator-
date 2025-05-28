@@ -599,6 +599,59 @@
         .hidden {
             display: none;
         }
+
+        /* Add Toast Container */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        /* Add Status Indicator */
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .status-spinner {
+            width: 24px;
+            height: 24px;
+            border: 4px solid var(--primary-color);
+            border-top: 4px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-text {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .status-indicator.show {
+            opacity: 1;
+        }
+
+        .status-indicator.hidden {
+            opacity: 0;
+        }
     </style>
     <link rel="stylesheet" href="/styles.css">
 </head>
@@ -620,14 +673,9 @@
                 <div class="template-selector">
                     <select id="templateSelect" class="template-dropdown" onchange="window.loadTemplate(this.value)">
                         <option value="">Select a template...</option>
-                        <option value="product-launch">Product Launch</option>
-                        <option value="social-media">Social Media Teaser</option>
-                        <option value="email-campaign">Email Campaign</option>
-                        <option value="product-comparison">Product Comparison</option>
-                        <option value="brand-storytelling">Brand Storytelling</option>
                     </select>
-                                </div>
-                            </div>
+                </div>
+            </div>
 
             <form id="copyForm" role="form" aria-label="Marketing copy generation form" onsubmit="window.handleSubmit(event)">
                 <div class="form-group">
@@ -670,6 +718,9 @@
             <div id="loading" class="loading hidden" role="status" aria-live="polite">
                 <div class="spinner"></div>
                 <p>Generating your copy...</p>
+                <div class="progress">
+                    <div class="progress-bar" style="width: 0%"></div>
+                </div>
             </div>
 
             <div id="result" class="result hidden" role="region" aria-live="polite">
@@ -681,22 +732,31 @@
                 
                 <!-- Export Options -->
                 <div class="export-options">
-                    <button onclick="window.exportAsText()" class="btn btn-secondary">
+                    <button onclick="window.exportAsText()" class="btn btn-secondary" id="exportTextBtn" disabled>
                         <i class="fas fa-file-alt"></i>
                         Export as Text
                     </button>
-                    <button onclick="window.exportAsPDF()" class="btn btn-secondary">
+                    <button onclick="window.exportAsPDF()" class="btn btn-secondary" id="exportPdfBtn" disabled>
                         <i class="fas fa-file-pdf"></i>
                         Export as PDF
                     </button>
-                    <button onclick="window.copyToClipboard()" class="btn btn-secondary">
+                    <button onclick="window.copyToClipboard()" class="btn btn-secondary" id="copyBtn" disabled>
                         <i class="fas fa-copy"></i>
-                    Copy to Clipboard
-                </button>
+                        Copy to Clipboard
+                    </button>
                 </div>
             </div>
 
             <div id="error" class="error hidden" role="alert" aria-live="assertive"></div>
+
+            <!-- Add Toast Container -->
+            <div id="toastContainer" class="toast-container"></div>
+
+            <!-- Add Status Indicator -->
+            <div id="statusIndicator" class="status-indicator">
+                <div class="status-spinner"></div>
+                <span id="statusText">Generating copy...</span>
+            </div>
 
             <!-- Usage Statistics -->
             <div id="usageStats" class="usage-stats">
@@ -723,17 +783,40 @@
         import { getTemplate, getTemplateOptions } from './scripts/templates.js';
         import { validatePrompt, validateTone, validateResponse, filterContent, qualityCheck } from './scripts/validation.js';
         import { exportAsText, exportAsPDF, getExportMetadata } from './scripts/export.js';
-        import { startTiming, endTiming, calculateTokenUsage, updateStatsDisplay, getGenerationStats, updateUsageStats } from './scripts/stats.js';
+        import { startTiming, endTiming, calculateTokenUsage, updateStatsDisplay, getGenerationStats, updateUsageStats, resetStats } from './scripts/stats.js';
         import { updateToneValue, copyToClipboard, showError, hideError, showLoading, hideLoading, updateResult, clearForm } from './scripts/ui.js';
 
-        // Make functions available globally
-        window.loadTemplate = async function(templateId) {
+        // Initialize global functions first
+        window.updateToneValue = function(value) {
             try {
-                const template = await getTemplate(templateId);
+                updateToneValue(value);
+            } catch (err) {
+                console.error('Error updating tone:', err);
+                // Fallback update if the main function fails
+                const toneValue = document.querySelector('.tone-value');
+                const toneDescription = document.getElementById('toneDescription');
+                if (toneValue) {
+                    toneValue.textContent = value;
+                }
+                if (toneDescription) {
+                    if (value < 33) {
+                        toneDescription.textContent = 'Casual and conversational tone';
+                    } else if (value < 66) {
+                        toneDescription.textContent = 'Balanced and professional tone';
+                    } else {
+                        toneDescription.textContent = 'Formal and corporate tone';
+                    }
+                }
+            }
+        };
+
+        window.loadTemplate = function(templateId) {
+            try {
+                const template = getTemplate(templateId);
                 if (template) {
                     document.getElementById('prompt').value = template.prompt;
                     document.getElementById('tone').value = template.tone || 50;
-                    updateToneValue(template.tone || 50);
+                    window.updateToneValue(template.tone || 50);
                 }
             } catch (err) {
                 showError('Failed to load template');
@@ -741,13 +824,109 @@
             }
         };
 
-        window.updateToneValue = updateToneValue;
-        window.exportAsText = exportAsText;
-        window.exportAsPDF = exportAsPDF;
-        window.copyToClipboard = copyToClipboard;
-        window.clearForm = clearForm;
+        window.exportAsText = async function() {
+            try {
+                await exportAsText();
+            } catch (err) {
+                showError(err.message);
+            }
+        };
 
-        // Form submission handling
+        window.exportAsPDF = async function() {
+            try {
+                await exportAsPDF();
+            } catch (err) {
+                showError(err.message);
+            }
+        };
+
+        window.copyToClipboard = copyToClipboard;
+        window.clearForm = function() {
+            clearForm();
+            resetStats();
+        };
+        window.handleSubmit = handleSubmit;
+
+        // Initialize templates
+        function initializeTemplates() {
+            try {
+                const templateSelect = document.getElementById('templateSelect');
+                const templates = getTemplateOptions();
+                
+                templates.forEach(template => {
+                    const option = document.createElement('option');
+                    option.value = template.id;
+                    option.textContent = template.name;
+                    templateSelect.appendChild(option);
+                });
+            } catch (err) {
+                console.error('Error initializing templates:', err);
+                showError('Failed to load templates');
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                initializeTemplates();
+                // Set initial tone value
+                const initialTone = document.getElementById('tone')?.value || 50;
+                window.updateToneValue(initialTone);
+            } catch (err) {
+                console.error('Error during initialization:', err);
+            }
+        });
+
+        // Add toast notification functions
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            let content = '';
+            if (type === 'info') {
+                content = `
+                    <div class="toast-spinner"></div>
+                    <div class="toast-content">${message}</div>
+                `;
+            } else {
+                content = `
+                    <div class="toast-content">${message}</div>
+                    <button class="toast-close" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+            }
+            
+            toast.innerHTML = content;
+            document.getElementById('toastContainer').appendChild(toast);
+            
+            // Trigger reflow
+            toast.offsetHeight;
+            toast.classList.add('show');
+            
+            if (type !== 'info') {
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+            
+            return toast;
+        }
+
+        function showStatusIndicator(show, message = 'Generating copy...') {
+            const indicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            
+            if (show) {
+                statusText.textContent = message;
+                indicator.classList.add('show');
+            } else {
+                indicator.classList.remove('show');
+            }
+        }
+
+        // Update handleSubmit function
         async function handleSubmit(event) {
             event.preventDefault();
             
@@ -755,8 +934,18 @@
             const toneField = document.getElementById('tone');
             const generateBtn = document.getElementById('generateBtn');
             
-            // Clear previous errors
+            // Disable export buttons during generation
+            document.getElementById('exportTextBtn').disabled = true;
+            document.getElementById('exportPdfBtn').disabled = true;
+            document.getElementById('copyBtn').disabled = true;
+            
+            // Clear previous errors and reset stats
             hideError();
+            resetStats();
+            
+            // Show non-obstructive loading indicators
+            const loadingToast = showToast('Generating your marketing copy...', 'info');
+            showStatusIndicator(true);
             
             try {
                 // Validate inputs
@@ -766,9 +955,7 @@
                 // Start timing
                 startTiming();
                 
-                // Show loading state
-                showLoading();
-            generateBtn.disabled = true;
+                generateBtn.disabled = true;
 
                 const response = await fetch('/api/generate', {
                     method: 'POST',
@@ -778,55 +965,78 @@
                     body: JSON.stringify({ prompt, tone })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
+                
+                // Calculate statistics
+                const generationTime = endTiming();
+                calculateTokenUsage(data);
                 
                 // Validate and filter response
                 validateResponse(data);
+                
+                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                    throw new Error('Invalid response format from API');
+                }
+
                 let content = data.choices[0].message.content;
                 content = filterContent(content);
                 
                 if (!qualityCheck(content)) {
                     throw new Error('Generated content did not meet quality standards');
-        }
+                }
 
-                // Calculate and display stats
-                const stats = getGenerationStats(data);
+                // Update stats display
+                const stats = getGenerationStats();
                 updateStatsDisplay(stats);
 
                 // Show result
                 updateResult(content);
                 
+                // Enable export buttons
+                document.getElementById('exportTextBtn').disabled = false;
+                document.getElementById('exportPdfBtn').disabled = false;
+                document.getElementById('copyBtn').disabled = false;
+                
                 // Update monthly stats
                 await updateUsageStats();
+
+                // Show success toast
+                showToast('Copy generated successfully!', 'success');
                 
             } catch (err) {
                 showError(err.message || 'An error occurred while generating copy');
+                showToast(err.message || 'An error occurred while generating copy', 'error');
                 console.error('Generation error:', err);
             } finally {
-                hideLoading();
+                // Hide loading indicators
+                loadingToast?.remove();
+                showStatusIndicator(false);
                 generateBtn.disabled = false;
             }
         }
 
-        window.handleSubmit = handleSubmit;
+        // Progress bar update function
+        function updateProgressBar(message, progress) {
+            const loading = document.getElementById('loading');
+            if (!loading) return;
+            
+            const progressText = loading.querySelector('p');
+            if (progressText) {
+                progressText.textContent = message;
+            }
+            
+            const progressBar = loading.querySelector('.progress-bar');
+            if (progressBar) {
+                progressBar.style.width = `${progress}%`;
+            }
+        }
 
         // Initialize form
         document.getElementById('copyForm').addEventListener('submit', handleSubmit);
-        
-        // Initialize templates
-        const templateSelect = document.getElementById('templateSelect');
-        getTemplateOptions().forEach(({ id, name }) => {
-            const option = document.createElement('option');
-            option.value = id;
-            option.textContent = name;
-            templateSelect.appendChild(option);
-        });
-
-        // Initialize tone slider
-        updateToneValue(50);
-
-        // Load initial usage stats
-        updateUsageStats().catch(console.error);
     </script>
 </body>
 </html>
