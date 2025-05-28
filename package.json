@@ -21,7 +21,9 @@
     "axios": "^1.6.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.1",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "google-spreadsheet": "^4.1.1",
+    "moment": "^2.30.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.3"

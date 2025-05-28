@@ -3,9 +3,20 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const axios = require('axios');
+const TokenTracker = require('./utils/tokenTracker');
 
 const app = express();
 const port = process.env.PORT || 3001;
+
+// Initialize token tracker
+let tokenTracker;
+try {
+    const credentials = require(process.env.GOOGLE_CREDENTIALS_PATH);
+    tokenTracker = new TokenTracker(process.env.GOOGLE_SHEETS_ID, credentials);
+    tokenTracker.init().catch(console.error);
+} catch (error) {
+    console.warn('Token tracking disabled:', error.message);
+}
 
 // Middleware
 app.use(express.static('public'));
@@ -74,6 +85,21 @@ app.post('/api/generate', async (req, res) => {
         } else {
             throw new Error('Invalid response format from AI21');
         }
+
+        // Log token usage if tracker is available
+        if (tokenTracker) {
+            try {
+                await tokenTracker.logUsage({
+                    promptTokens: response.data.prompt.tokens,
+                    completionTokens: response.data.choices[0].message.content.length,
+                    endpoint: 'jamba-large-1.6',
+                    status: response.status === 200 ? 'success' : 'error',
+                    error: response.status === 200 ? '' : response.data.error || 'Unknown error'
+                });
+            } catch (error) {
+                console.error('Failed to log token usage:', error);
+            }
+        }
     } catch (error) {
         console.error('Generation error:', error.response?.data || error.message);
         res.status(500).json({
@@ -81,6 +107,21 @@ app.post('/api/generate', async (req, res) => {
             error: 'Failed to generate copy',
             details: error.response?.data?.detail || error.message
         });
+    }
+});
+
+// Endpoint to get token usage statistics
+app.get('/api/stats', async (req, res) => {
+    try {
+        if (!tokenTracker) {
+            return res.status(404).json({ error: 'Token tracking not configured' });
+        }
+
+        const stats = await tokenTracker.getMonthlyStats();
+        res.json(stats);
+    } catch (error) {
+        console.error('Error getting stats:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 
