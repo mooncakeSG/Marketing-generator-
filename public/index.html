@@ -4,8 +4,124 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Marketing Copy Generator</title>
+    <!-- Add Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Add Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="/theme.js" defer></script>
     <style>
+        /* Base styles */
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #ffffff;
+            --text-color: #1f2937;
+            --border-color: #e5e7eb;
+            --card-bg: #ffffff;
+        }
+
+        html.dark {
+            --primary-color: #3b82f6;
+            --primary-hover: #60a5fa;
+            --bg-color: #111827;
+            --text-color: #f3f4f6;
+            --border-color: #374151;
+            --card-bg: #1f2937;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Theme toggle button styles */
+        .theme-toggle {
+            background: transparent !important;
+            border: 2px solid var(--primary-color) !important;
+            color: var(--primary-color) !important;
+            padding: 8px 16px !important;
+            border-radius: 8px !important;
+            cursor: pointer !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .theme-toggle:hover {
+            background: var(--primary-color) !important;
+            color: white !important;
+            transform: translateY(-1px) !important;
+        }
+
+        .theme-toggle i {
+            font-size: 16px !important;
+        }
+
+        /* Card styles */
+        .card {
+            background-color: var(--card-bg) !important;
+            border: 1px solid var(--border-color) !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        /* Form controls */
+        textarea {
+            background-color: var(--bg-color) !important;
+            color: var(--text-color) !important;
+            border-color: var(--border-color) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        textarea:focus {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+            outline: none !important;
+        }
+
+        /* Button styles */
+        .btn-primary {
+            background: var(--primary-color) !important;
+            border: none !important;
+            color: white !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover) !important;
+            transform: translateY(-1px) !important;
+        }
+
+        .btn-secondary {
+            background: transparent !important;
+            border: 2px solid var(--primary-color) !important;
+            color: var(--primary-color) !important;
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-color) !important;
+            color: white !important;
+        }
+
+        /* Template buttons */
+        .template-buttons button {
+            background: var(--primary-color) !important;
+            color: white !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .template-buttons button:hover {
+            background: var(--primary-hover) !important;
+            transform: translateY(-1px) !important;
+        }
+
         /* Critical styles inline to ensure visibility */
         .container {
             max-width: 800px !important;
@@ -72,18 +188,6 @@
             font-weight: 500 !important;
             margin-bottom: 12px !important;
             color: var(--text-color) !important;
-        }
-
-        textarea {
-            width: 100% !important;
-            min-height: 120px !important;
-            padding: 16px !important;
-            border: 2px solid #e5e7eb !important;
-            border-radius: 8px !important;
-            font-size: 16px !important;
-            line-height: 1.5 !important;
-            margin-bottom: 24px !important;
-            resize: vertical !important;
         }
 
         .slider-container {
@@ -397,10 +501,8 @@
             <div class="header-container">
                 <h1>AI Marketing Copy Generator</h1>
                 <button id="themeButton" class="theme-toggle" type="button">
-                    Dark Mode
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-                    </svg>
+                    <i class="fas fa-sun"></i>
+                    <span>Toggle Theme</span>
                 </button>
             </div>
             <p class="subtitle">Generate compelling marketing copy for your products and services using AI</p>
