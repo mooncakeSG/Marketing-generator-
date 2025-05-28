@@ -1,4 +1,6 @@
 # AI Marketing Copy Generator
+## Project Link (using render.com):
+https://marketing-generator.onrender.com
 
 A modern web application that generates high-quality marketing copy using AI. Built with modern web technologies and best practices in prompt engineering.
 
