@@ -40,7 +40,7 @@
 
         /* Theme toggle button styles */
         .theme-toggle {
-            background: transparent !important;
+            background: var(--bg-color) !important;
             border: 2px solid var(--primary-color) !important;
             color: var(--primary-color) !important;
             padding: 8px 16px !important;
@@ -51,17 +51,30 @@
             display: inline-flex !important;
             align-items: center !important;
             gap: 8px !important;
-            transition: all 0.2s ease !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+            position: relative !important;
+            overflow: hidden !important;
         }
 
         .theme-toggle:hover {
-            background: var(--primary-color) !important;
-            color: white !important;
             transform: translateY(-1px) !important;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .theme-toggle:active {
+            transform: translateY(0) !important;
         }
 
         .theme-toggle i {
             font-size: 16px !important;
+            transition: all 0.3s ease !important;
+        }
+
+        html.dark .theme-toggle {
+            background: var(--card-bg) !important;
+            border-color: var(--primary-color) !important;
+            color: var(--primary-color) !important;
         }
 
         /* Card styles */
@@ -114,12 +127,21 @@
         .template-buttons button {
             background: var(--primary-color) !important;
             color: white !important;
-            transition: all 0.2s ease !important;
+            padding: 12px 24px !important;
+            border: none !important;
+            border-radius: 8px !important;
+            cursor: pointer !important;
+            font-size: 16px !important;
+            font-weight: 500 !important;
+            min-width: 180px !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
         }
 
         .template-buttons button:hover {
-            background: var(--primary-hover) !important;
             transform: translateY(-1px) !important;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+            background: var(--primary-hover) !important;
         }
 
         /* Critical styles inline to ensure visibility */
@@ -298,25 +320,48 @@
         }
 
         .loading {
-            text-align: center !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 16px !important;
             padding: 32px !important;
-            margin: 32px 0 !important;
+        }
+
+        .spinner {
+            width: 40px !important;
+            height: 40px !important;
+            border: 4px solid var(--border-color) !important;
+            border-top: 4px solid var(--primary-color) !important;
+            border-radius: 50% !important;
+            animation: spin 1s linear infinite !important;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .result {
-            margin-top: 32px !important;
-            padding: 24px !important;
-            border-top: 2px solid #e5e7eb !important;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .result.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .copy-text {
-            background: #f9fafb !important;
-            padding: 20px !important;
+            background: var(--bg-color) !important;
+            border: 1px solid var(--border-color) !important;
             border-radius: 8px !important;
+            padding: 20px !important;
             margin: 16px 0 !important;
-            white-space: pre-wrap !important;
             font-size: 16px !important;
             line-height: 1.6 !important;
+            color: var(--text-color) !important;
+            transition: all 0.3s ease !important;
         }
 
         .error {
@@ -331,11 +376,20 @@
             position: fixed !important;
             bottom: 32px !important;
             right: 32px !important;
-            background: #059669 !important;
+            background: var(--primary-color) !important;
             color: white !important;
-            padding: 16px 32px !important;
+            padding: 12px 24px !important;
             border-radius: 8px !important;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000 !important;
+        }
+
+        .toast.visible {
+            transform: translateY(0);
+            opacity: 1;
         }
 
         /* Dark mode styles */
@@ -492,6 +546,52 @@
             color: #60a5fa !important;
             border-color: #60a5fa !important;
         }
+
+        /* Usage Statistics Styles */
+        .usage-stats {
+            margin-top: 32px;
+            padding: 24px;
+            border-top: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .usage-stats h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: var(--text-color);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .hidden {
+            display: none;
+        }
     </style>
     <link rel="stylesheet" href="/styles.css">
 </head>
@@ -643,6 +743,25 @@
             </div>
 
             <div id="error" class="error hidden" role="alert" aria-live="assertive"></div>
+
+            <!-- Usage Statistics -->
+            <div id="usageStats" class="usage-stats hidden">
+                <h3>Monthly Usage Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalTokens">0</div>
+                        <div class="stat-label">Total Tokens</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalCost">$0.00</div>
+                        <div class="stat-label">Total Cost</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalRequests">0</div>
+                        <div class="stat-label">Total Requests</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -816,6 +935,36 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateToneValue(50); // Set initial value
         });
+
+        // Function to update usage statistics
+        async function updateUsageStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                if (stats.error) {
+                    console.warn('Stats not available:', stats.error);
+                    return;
+                }
+
+                document.getElementById('usageStats').classList.remove('hidden');
+                document.getElementById('totalTokens').textContent = stats.totalTokens.toLocaleString();
+                document.getElementById('totalCost').textContent = `$${stats.totalCost.toFixed(2)}`;
+                document.getElementById('totalRequests').textContent = stats.totalRequests.toLocaleString();
+            } catch (error) {
+                console.error('Failed to fetch usage stats:', error);
+            }
+        }
+
+        // Update stats when page loads and after each generation
+        document.addEventListener('DOMContentLoaded', updateUsageStats);
+        
+        // Update the handleSubmit function to refresh stats after generation
+        const originalHandleSubmit = handleSubmit;
+        handleSubmit = async (event) => {
+            await originalHandleSubmit(event);
+            updateUsageStats();
+        };
     </script>
 </body>
 </html>
