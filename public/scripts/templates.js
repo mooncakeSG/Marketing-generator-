@@ -1,101 +1,44 @@
-// Marketing copy templates
+// Template definitions
 const templates = {
     'product-launch': {
         name: 'Product Launch',
-        template: `Write a compelling product launch announcement for [product name]. Focus on:
-- Unique value proposition
-- Key features and benefits
-- Target audience pain points
-- Launch timing and availability
-- Call to action
-Tone: Professional and exciting`,
-        placeholders: ['[product name]']
+        prompt: 'Write a compelling product launch announcement for [Product Name]. Include key features, benefits, and a strong call to action. Target audience: [Target Audience]. Key selling points: [Key Points].',
+        tone: 75
     },
     'social-media': {
         name: 'Social Media Teaser',
-        template: `Create an engaging social media post for [product/service] that:
-- Hooks attention in first line
-- Uses conversational language
-- Includes relevant hashtags
-- Drives engagement
-- Fits platform character limits
-Length: 280 characters max`,
-        placeholders: ['[product/service]']
+        prompt: 'Create engaging social media copy for [Product/Service]. Include hashtags, emojis, and a hook that drives engagement. Platform: [Platform]. Goal: [Marketing Goal].',
+        tone: 40
     },
     'email-campaign': {
         name: 'Email Campaign',
-        template: `Design an email marketing campaign for [product/service] including:
-- Attention-grabbing subject line
-- Personalized greeting
-- Value proposition
-- Social proof elements
-- Clear CTA
-- Urgency drivers
-Format: HTML-safe`,
-        placeholders: ['[product/service]']
+        prompt: 'Write an email marketing campaign for [Product/Service]. Include subject line, preview text, and body copy. Focus on [Key Benefit] and include a clear call to action.',
+        tone: 60
     },
     'product-comparison': {
         name: 'Product Comparison',
-        template: `Create a balanced comparison between [product] and its competitors:
-- Key differentiators
-- Feature comparison
-- Price-value proposition
-- Target audience fit
-- Competitive advantages
-Style: Objective and data-driven`,
-        placeholders: ['[product]']
+        prompt: 'Create a marketing comparison between [Product] and its competitors. Highlight unique selling points, advantages, and why customers should choose our product. Key differentiators: [Differentiators].',
+        tone: 70
     },
     'brand-storytelling': {
         name: 'Brand Storytelling',
-        template: `Craft a compelling brand story for [company name] highlighting:
-- Origin and mission
-- Core values
-- Customer impact
-- Vision for future
-- Emotional connection
-Style: Narrative and authentic`,
-        placeholders: ['[company name]']
+        prompt: 'Tell the story of [Brand/Company]. Include the origin, mission, values, and vision. Focus on emotional connection and authenticity. Key message: [Key Message].',
+        tone: 65
     }
 };
 
-// Get template by ID
-function getTemplate(templateId) {
-    return templates[templateId] || null;
-}
-
-// Get all template names for dropdown
-function getTemplateOptions() {
+// Get template options for dropdown
+export function getTemplateOptions() {
     return Object.entries(templates).map(([id, template]) => ({
         id,
         name: template.name
     }));
 }
 
-// Load template into prompt field
-function loadTemplate(templateId) {
-    const template = getTemplate(templateId);
-    if (!template) return null;
-    
-    const promptField = document.getElementById('prompt');
-    if (promptField) {
-        promptField.value = template.template;
-        
-        // Focus on first placeholder if exists
-        if (template.placeholders && template.placeholders.length > 0) {
-            const placeholder = template.placeholders[0];
-            const start = template.template.indexOf(placeholder);
-            if (start >= 0) {
-                promptField.focus();
-                promptField.setSelectionRange(start, start + placeholder.length);
-            }
-        }
-    }
-    return template;
+// Get specific template by ID
+export function getTemplate(templateId) {
+    return templates[templateId];
 }
 
-// Export functions
-export {
-    getTemplate,
-    getTemplateOptions,
-    loadTemplate
-}; 
+// Export templates object for reference
+export const templateList = templates; 

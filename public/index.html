@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Add Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Add jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="/theme.js" defer></script>
     <style>
         /* Base styles */
@@ -608,15 +610,15 @@
                 <button id="themeButton" class="theme-toggle" type="button">
                     <i class="fas fa-sun"></i>
                     <span>Toggle Theme</span>
-                </button>
-            </div>
+            </button>
+        </div>
             <p class="subtitle">Generate compelling marketing copy for your products and services using AI</p>
             
             <!-- Debug version of template section -->
             <div class="template-section">
                 <h2>What would you like to generate copy for?</h2>
                 <div class="template-selector">
-                    <select id="templateSelect" class="template-dropdown" onchange="loadTemplate(this.value)">
+                    <select id="templateSelect" class="template-dropdown" onchange="window.loadTemplate(this.value)">
                         <option value="">Select a template...</option>
                         <option value="product-launch">Product Launch</option>
                         <option value="social-media">Social Media Teaser</option>
@@ -624,10 +626,10 @@
                         <option value="product-comparison">Product Comparison</option>
                         <option value="brand-storytelling">Brand Storytelling</option>
                     </select>
-                </div>
-            </div>
+                                </div>
+                            </div>
 
-            <form id="copyForm" role="form" aria-label="Marketing copy generation form" onsubmit="handleSubmit(event)">
+            <form id="copyForm" role="form" aria-label="Marketing copy generation form" onsubmit="window.handleSubmit(event)">
                 <div class="form-group">
                     <label for="prompt">Marketing Brief</label>
                     <textarea id="prompt" name="prompt" rows="4" required
@@ -640,7 +642,7 @@
                     <label for="tone">Tone</label>
                     <div class="slider-container">
                         <input type="range" id="tone" name="tone" min="0" max="100" value="50" 
-                               class="tone-slider" oninput="updateToneValue(this.value)">
+                               class="tone-slider" oninput="window.updateToneValue(this.value)">
                         <div class="tone-value">50</div>
                         <div class="tone-labels">
                             <span>Casual</span>
@@ -679,18 +681,18 @@
                 
                 <!-- Export Options -->
                 <div class="export-options">
-                    <button onclick="exportAsText()" class="btn btn-secondary">
+                    <button onclick="window.exportAsText()" class="btn btn-secondary">
                         <i class="fas fa-file-alt"></i>
                         Export as Text
                     </button>
-                    <button onclick="exportAsPDF()" class="btn btn-secondary">
+                    <button onclick="window.exportAsPDF()" class="btn btn-secondary">
                         <i class="fas fa-file-pdf"></i>
                         Export as PDF
                     </button>
-                    <button onclick="copyToClipboard()" class="btn btn-secondary">
+                    <button onclick="window.copyToClipboard()" class="btn btn-secondary">
                         <i class="fas fa-copy"></i>
-                        Copy to Clipboard
-                    </button>
+                    Copy to Clipboard
+                </button>
                 </div>
             </div>
 
@@ -718,32 +720,43 @@
     </div>
 
     <script type="module">
-        import { getTemplate, getTemplateOptions, loadTemplate } from './scripts/templates.js';
+        import { getTemplate, getTemplateOptions } from './scripts/templates.js';
         import { validatePrompt, validateTone, validateResponse, filterContent, qualityCheck } from './scripts/validation.js';
         import { exportAsText, exportAsPDF, getExportMetadata } from './scripts/export.js';
-        import { startTiming, endTiming, calculateTokenUsage, updateStatsDisplay, getGenerationStats } from './scripts/stats.js';
+        import { startTiming, endTiming, calculateTokenUsage, updateStatsDisplay, getGenerationStats, updateUsageStats } from './scripts/stats.js';
+        import { updateToneValue, copyToClipboard, showError, hideError, showLoading, hideLoading, updateResult, clearForm } from './scripts/ui.js';
 
         // Make functions available globally
-        window.loadTemplate = loadTemplate;
+        window.loadTemplate = async function(templateId) {
+            try {
+                const template = await getTemplate(templateId);
+                if (template) {
+                    document.getElementById('prompt').value = template.prompt;
+                    document.getElementById('tone').value = template.tone || 50;
+                    updateToneValue(template.tone || 50);
+                }
+            } catch (err) {
+                showError('Failed to load template');
+                console.error('Template loading error:', err);
+            }
+        };
+
+        window.updateToneValue = updateToneValue;
         window.exportAsText = exportAsText;
         window.exportAsPDF = exportAsPDF;
-        
+        window.copyToClipboard = copyToClipboard;
+        window.clearForm = clearForm;
+
         // Form submission handling
         async function handleSubmit(event) {
             event.preventDefault();
             
             const promptField = document.getElementById('prompt');
             const toneField = document.getElementById('tone');
-            const loading = document.getElementById('loading');
-            const result = document.getElementById('result');
-            const error = document.getElementById('error');
-            const copyText = document.getElementById('copyText');
             const generateBtn = document.getElementById('generateBtn');
-            const promptError = document.getElementById('promptError');
             
             // Clear previous errors
-            error.classList.add('hidden');
-            promptError.classList.add('hidden');
+            hideError();
             
             try {
                 // Validate inputs
@@ -754,9 +767,8 @@
                 startTiming();
                 
                 // Show loading state
-                loading.classList.remove('hidden');
-                generateBtn.disabled = true;
-                result.classList.add('hidden');
+                showLoading();
+            generateBtn.disabled = true;
 
                 const response = await fetch('/api/generate', {
                     method: 'POST',
@@ -775,28 +787,28 @@
                 
                 if (!qualityCheck(content)) {
                     throw new Error('Generated content did not meet quality standards');
-                }
-                
+        }
+
                 // Calculate and display stats
                 const stats = getGenerationStats(data);
                 updateStatsDisplay(stats);
-                
+
                 // Show result
-                result.classList.remove('hidden');
-                copyText.innerHTML = content.split('\n').map(line => `<p>${line}</p>`).join('');
+                updateResult(content);
                 
                 // Update monthly stats
-                updateUsageStats();
+                await updateUsageStats();
                 
             } catch (err) {
-                error.textContent = err.message || 'An error occurred while generating copy';
-                error.classList.remove('hidden');
+                showError(err.message || 'An error occurred while generating copy');
                 console.error('Generation error:', err);
             } finally {
-                loading.classList.add('hidden');
+                hideLoading();
                 generateBtn.disabled = false;
             }
         }
+
+        window.handleSubmit = handleSubmit;
 
         // Initialize form
         document.getElementById('copyForm').addEventListener('submit', handleSubmit);
@@ -809,6 +821,12 @@
             option.textContent = name;
             templateSelect.appendChild(option);
         });
+
+        // Initialize tone slider
+        updateToneValue(50);
+
+        // Load initial usage stats
+        updateUsageStats().catch(console.error);
     </script>
 </body>
 </html>

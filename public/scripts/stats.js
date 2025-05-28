@@ -85,6 +85,84 @@ function getGenerationStats(response) {
     };
 }
 
+// Update monthly usage stats
+async function updateUsageStats() {
+    try {
+        const response = await fetch('/api/stats');
+        const stats = await response.json();
+
+        // Update UI elements
+        document.getElementById('totalTokens').textContent = formatTokenCount(stats.totalTokens);
+        document.getElementById('totalCost').textContent = formatCost(stats.totalCost);
+        document.getElementById('totalRequests').textContent = stats.totalRequests;
+    } catch (error) {
+        console.error('Failed to update usage stats:', error);
+    }
+}
+
+// Mock data for development
+let mockStats = {
+    totalTokens: 0,
+    totalCost: 0,
+    totalRequests: 0
+};
+
+// Timing utilities
+let startTime = 0;
+
+export function startTiming() {
+    startTime = Date.now();
+}
+
+export function endTiming() {
+    return Date.now() - startTime;
+}
+
+// Token calculation (mock implementation)
+export function calculateTokenUsage(text) {
+    // Rough estimation: 1 token ≈ 4 characters
+    return Math.ceil(text.length / 4);
+}
+
+// Update stats display
+export function updateStatsDisplay(stats) {
+    document.getElementById('totalTokens').textContent = stats.tokens.toLocaleString();
+    document.getElementById('totalCost').textContent = `$${stats.cost.toFixed(2)}`;
+    document.getElementById('totalRequests').textContent = stats.requests.toLocaleString();
+}
+
+// Get generation statistics
+export function getGenerationStats(response) {
+    const tokens = calculateTokenUsage(response.choices[0].message.content);
+    const cost = tokens * 0.000002; // Mock cost calculation
+    
+    // Update mock stats
+    mockStats.totalTokens += tokens;
+    mockStats.totalCost += cost;
+    mockStats.totalRequests += 1;
+    
+    return {
+        tokens,
+        cost,
+        requests: 1
+    };
+}
+
+// Update usage statistics
+export async function updateUsageStats() {
+    try {
+        // For development, use mock data instead of API call
+        updateStatsDisplay({
+            tokens: mockStats.totalTokens,
+            cost: mockStats.totalCost,
+            requests: mockStats.totalRequests
+        });
+    } catch (err) {
+        console.error('Failed to update usage stats:', err);
+        // Don't throw error to prevent blocking UI
+    }
+}
+
 // Export functions
 export {
     startTiming,
@@ -92,5 +170,6 @@ export {
     calculateTokenUsage,
     calculateCost,
     updateStatsDisplay,
-    getGenerationStats
+    getGenerationStats,
+    updateUsageStats
 }; 

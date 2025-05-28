@@ -1,119 +1,101 @@
 // Input validation module
 
 // Validate prompt input
-function validatePrompt(prompt) {
-    if (!prompt || typeof prompt !== 'string') {
-        throw new Error('Prompt is required');
+export function validatePrompt(prompt) {
+    if (!prompt || !prompt.trim()) {
+        throw new Error('Please enter a prompt');
     }
 
-    if (prompt.trim().length < 10) {
-        throw new Error('Prompt must be at least 10 characters long');
+    // Get effective length excluding placeholders
+    const effectiveLength = prompt.replace(/\[.*?\]/g, '').trim().length;
+
+    // Check minimum length - more lenient if contains placeholders
+    if (effectiveLength < 10 && !prompt.includes('[')) {
+        throw new Error('Prompt is too short. Please provide more details.');
     }
 
+    // Check maximum length
     if (prompt.trim().length > 1000) {
-        throw new Error('Prompt must not exceed 1000 characters');
-    }
-
-    // Check for placeholder text still present
-    if (prompt.includes('[') && prompt.includes(']')) {
-        throw new Error('Please replace all placeholder text in square brackets');
+        throw new Error('Prompt is too long. Please keep it under 1000 characters.');
     }
 
     return prompt.trim();
 }
 
 // Validate tone value
-function validateTone(tone) {
+export function validateTone(tone) {
     const toneValue = parseInt(tone);
-    
-    if (isNaN(toneValue)) {
-        throw new Error('Tone must be a number');
+    if (isNaN(toneValue) || toneValue < 0 || toneValue > 100) {
+        throw new Error('Invalid tone value. Please use a value between 0 and 100.');
     }
-
-    if (toneValue < 0 || toneValue > 100) {
-        throw new Error('Tone must be between 0 and 100');
-    }
-
     return toneValue;
 }
 
 // Validate API response
-function validateResponse(response) {
-    if (!response || typeof response !== 'object') {
-        throw new Error('Invalid API response format');
+export function validateResponse(response) {
+    if (!response) {
+        throw new Error('No response received from the server');
     }
 
-    if (!response.choices || !Array.isArray(response.choices)) {
-        throw new Error('Invalid API response structure');
+    if (response.error) {
+        throw new Error(response.error.message || 'Server error occurred');
     }
 
-    if (!response.choices[0]?.message?.content) {
-        throw new Error('No content in API response');
+    if (!response.choices || !response.choices[0] || !response.choices[0].message) {
+        throw new Error('Invalid response format from server');
     }
 
-    return true;
+    return response;
 }
 
-// Content filtering
-function filterContent(content) {
-    if (!content || typeof content !== 'string') {
-        return '';
-    }
-
-    // Remove any HTML tags
-    content = content.replace(/<[^>]*>/g, '');
+// Filter inappropriate content
+export function filterContent(content) {
+    if (!content) return '';
 
     // List of inappropriate words/phrases to filter
-    const inappropriatePatterns = [
-        /profanity/i,
-        /obscene/i,
-        /offensive/i,
-        // Add more patterns as needed
+    const inappropriateWords = [
+        'profanity',
+        'offensive',
+        'inappropriate',
+        // Add more words as needed
     ];
 
-    // Replace inappropriate content with asterisks
-    inappropriatePatterns.forEach(pattern => {
-        content = content.replace(pattern, '***');
+    let filteredContent = content;
+    inappropriateWords.forEach(word => {
+        const regex = new RegExp(word, 'gi');
+        filteredContent = filteredContent.replace(regex, '[filtered]');
     });
 
-    // Ensure the response is complete (ends with punctuation)
-    if (!content.match(/[.!?]$/)) {
-        content += '.';
-    }
-
-    return content.trim();
+    return filteredContent;
 }
 
-// Quality check
-function qualityCheck(content) {
+// Quality check for generated content
+export function qualityCheck(content) {
     if (!content || typeof content !== 'string') {
         return false;
     }
 
     // Minimum length check
     if (content.length < 50) {
-        return false;
+        throw new Error('Generated content is too short');
     }
 
-    // Check for complete sentences
-    if (!content.match(/[.!?]$/)) {
-        return false;
+    // Maximum length check
+    if (content.length > 5000) {
+        throw new Error('Generated content exceeds maximum length');
     }
 
-    // Check for balanced structure
-    const paragraphs = content.split('\n\n');
-    if (paragraphs.length < 2) {
-        return false;
+    // Check for coherence (basic)
+    if (!content.includes('.') || !content.includes(' ')) {
+        throw new Error('Generated content lacks proper structure');
+    }
+
+    // Check for repetition
+    const sentences = content.split('.');
+    const uniqueSentences = new Set(sentences.map(s => s.trim()));
+    if (uniqueSentences.size < sentences.length * 0.8) {
+        throw new Error('Generated content contains too much repetition');
     }
 
     return true;
-}
-
-// Export functions
-export {
-    validatePrompt,
-    validateTone,
-    validateResponse,
-    filterContent,
-    qualityCheck
-}; 
+} 
