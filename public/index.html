@@ -613,81 +613,17 @@
             <p class="subtitle">Generate compelling marketing copy for your products and services using AI</p>
             
             <!-- Debug version of template section -->
-            <div class="template-section" style="margin: 20px 0;">
+            <div class="template-section">
                 <h2>What would you like to generate copy for?</h2>
-                <div style="display: flex !important; flex-wrap: wrap !important; gap: 10px !important; margin: 20px 0 !important; padding: 20px !important; background: #f3f4f6 !important; border-radius: 8px !important;">
-                    <button type="button" 
-                            onclick="selectTemplate('product-launch')"
-                            style="background: #2563eb !important; 
-                                   color: white !important; 
-                                   padding: 12px 24px !important; 
-                                   border: none !important; 
-                                   border-radius: 8px !important; 
-                                   cursor: pointer !important; 
-                                   font-size: 16px !important; 
-                                   font-weight: 500 !important; 
-                                   min-width: 180px !important;
-                                   display: inline-block !important;
-                                   opacity: 1 !important;
-                                   visibility: visible !important;
-                                   position: static !important;
-                                   z-index: 9999 !important;">
-                        Product Launch
-                    </button>
-                    <button type="button" 
-                            onclick="selectTemplate('service-promotion')"
-                            style="background: #2563eb !important; 
-                                   color: white !important; 
-                                   padding: 12px 24px !important; 
-                                   border: none !important; 
-                                   border-radius: 8px !important; 
-                                   cursor: pointer !important; 
-                                   font-size: 16px !important; 
-                                   font-weight: 500 !important; 
-                                   min-width: 180px !important;
-                                   display: inline-block !important;
-                                   opacity: 1 !important;
-                                   visibility: visible !important;
-                                   position: static !important;
-                                   z-index: 9999 !important;">
-                        Service Promotion
-                    </button>
-                    <button type="button" 
-                            onclick="selectTemplate('social-media')"
-                            style="background: #2563eb !important; 
-                                   color: white !important; 
-                                   padding: 12px 24px !important; 
-                                   border: none !important; 
-                                   border-radius: 8px !important; 
-                                   cursor: pointer !important; 
-                                   font-size: 16px !important; 
-                                   font-weight: 500 !important; 
-                                   min-width: 180px !important;
-                                   display: inline-block !important;
-                                   opacity: 1 !important;
-                                   visibility: visible !important;
-                                   position: static !important;
-                                   z-index: 9999 !important;">
-                        Social Media Post
-                    </button>
-                    <button type="button" 
-                            onclick="selectTemplate('email')"
-                            style="background: #2563eb !important; 
-                                   color: white !important; 
-                                   padding: 12px 24px !important; 
-                                   border: none !important; 
-                                   border-radius: 8px !important; 
-                                   cursor: pointer !important; 
-                                   font-size: 16px !important; 
-                                   font-weight: 500 !important; 
-                                   min-width: 180px !important;
-                                   display: inline-block !important;
-                                   opacity: 1 !important;
-                                   visibility: visible !important;
-                                   position: static !important;
-                                   z-index: 9999 !important;">
-                        Email Campaign
-                    </button>
+                <div class="template-selector">
+                    <select id="templateSelect" class="template-dropdown" onchange="loadTemplate(this.value)">
+                        <option value="">Select a template...</option>
+                        <option value="product-launch">Product Launch</option>
+                        <option value="social-media">Social Media Teaser</option>
+                        <option value="email-campaign">Email Campaign</option>
+                        <option value="product-comparison">Product Comparison</option>
+                        <option value="brand-storytelling">Brand Storytelling</option>
+                    </select>
                 </div>
             </div>
 
@@ -697,6 +633,7 @@
                     <textarea id="prompt" name="prompt" rows="4" required
                               placeholder="Enter your prompt here... For example: Write a compelling marketing copy for a new AI-powered smartwatch that focuses on health tracking and productivity features."
                               aria-required="true"></textarea>
+                    <div id="promptError" class="error-message hidden"></div>
                 </div>
 
                 <div class="form-group">
@@ -718,21 +655,15 @@
 
                 <div class="button-group">
                     <button type="submit" class="btn btn-primary" id="generateBtn">
-                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke-width="2"/>
-                            <path d="M9.5 9a3.5 3.5 0 0 1 5 0" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
+                        <i class="fas fa-magic"></i>
                         Generate Copy
                     </button>
-                    <button type="reset" class="btn btn-secondary" id="clearBtn">Clear</button>
+                    <button type="reset" class="btn btn-secondary" id="clearBtn">
+                        <i class="fas fa-times"></i>
+                        Clear
+                    </button>
                 </div>
             </form>
-
-            <!-- Test Buttons -->
-            <div class="test-buttons-container">
-                <button class="test-btn test-btn-primary">Generate Copy</button>
-                <button class="test-btn test-btn-secondary">Clear</button>
-            </div>
 
             <div id="loading" class="loading hidden" role="status" aria-live="polite">
                 <div class="spinner"></div>
@@ -742,15 +673,31 @@
             <div id="result" class="result hidden" role="region" aria-live="polite">
                 <h2>Generated Copy:</h2>
                 <div id="copyText" class="copy-text"></div>
-                <button onclick="copyToClipboard()" class="btn btn-secondary copy-btn">
-                    Copy to Clipboard
-                </button>
+                
+                <!-- Generation Stats -->
+                <div id="generationStats" class="generation-stats"></div>
+                
+                <!-- Export Options -->
+                <div class="export-options">
+                    <button onclick="exportAsText()" class="btn btn-secondary">
+                        <i class="fas fa-file-alt"></i>
+                        Export as Text
+                    </button>
+                    <button onclick="exportAsPDF()" class="btn btn-secondary">
+                        <i class="fas fa-file-pdf"></i>
+                        Export as PDF
+                    </button>
+                    <button onclick="copyToClipboard()" class="btn btn-secondary">
+                        <i class="fas fa-copy"></i>
+                        Copy to Clipboard
+                    </button>
+                </div>
             </div>
 
             <div id="error" class="error hidden" role="alert" aria-live="assertive"></div>
 
             <!-- Usage Statistics -->
-            <div id="usageStats" class="usage-stats hidden">
+            <div id="usageStats" class="usage-stats">
                 <h3>Monthly Usage Statistics</h3>
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -770,215 +717,98 @@
         </div>
     </div>
 
-    <script>
-        // Add this at the start of your script section
-        const themeToggle = document.getElementById('themeToggle');
-        const sunIcon = document.getElementById('sunIcon');
-        const moonIcon = document.getElementById('moonIcon');
+    <script type="module">
+        import { getTemplate, getTemplateOptions, loadTemplate } from './scripts/templates.js';
+        import { validatePrompt, validateTone, validateResponse, filterContent, qualityCheck } from './scripts/validation.js';
+        import { exportAsText, exportAsPDF, getExportMetadata } from './scripts/export.js';
+        import { startTiming, endTiming, calculateTokenUsage, updateStatsDisplay, getGenerationStats } from './scripts/stats.js';
 
-        // Check for saved theme preference or default to light
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.className = savedTheme;
-        updateThemeIcons(savedTheme);
-
-        function updateThemeIcons(theme) {
-            if (theme === 'dark') {
-                sunIcon.style.display = 'none';
-                moonIcon.style.display = 'block';
-            } else {
-                sunIcon.style.display = 'block';
-                moonIcon.style.display = 'none';
-            }
-        }
-
-        themeToggle.addEventListener('click', () => {
-            const html = document.documentElement;
-            const currentTheme = html.className;
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            html.className = newTheme;
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcons(newTheme);
-        });
-
+        // Make functions available globally
+        window.loadTemplate = loadTemplate;
+        window.exportAsText = exportAsText;
+        window.exportAsPDF = exportAsPDF;
+        
         // Form submission handling
         async function handleSubmit(event) {
             event.preventDefault();
             
-            const prompt = document.getElementById('prompt').value.trim();
-            const tone = document.getElementById('tone').value;
+            const promptField = document.getElementById('prompt');
+            const toneField = document.getElementById('tone');
             const loading = document.getElementById('loading');
             const result = document.getElementById('result');
             const error = document.getElementById('error');
             const copyText = document.getElementById('copyText');
             const generateBtn = document.getElementById('generateBtn');
+            const promptError = document.getElementById('promptError');
             
-            if (!prompt) {
-                error.textContent = 'Please enter a prompt';
-                error.classList.remove('hidden');
-                return;
-            }
-
-            // Clear previous results and errors
-            result.classList.add('hidden');
+            // Clear previous errors
             error.classList.add('hidden');
-
-            // Show loading state
-            loading.classList.remove('hidden');
-            loading.classList.add('visible');
-            generateBtn.disabled = true;
-
+            promptError.classList.add('hidden');
+            
             try {
+                // Validate inputs
+                const prompt = validatePrompt(promptField.value);
+                const tone = validateTone(toneField.value);
+                
+                // Start timing
+                startTiming();
+                
+                // Show loading state
+                loading.classList.remove('hidden');
+                generateBtn.disabled = true;
+                result.classList.add('hidden');
+
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        prompt: prompt,
-                        tone: parseInt(tone)
-                    })
+                    body: JSON.stringify({ prompt, tone })
                 });
 
                 const data = await response.json();
-                console.log('API Response:', data);
-
-                // Hide loading state
-                loading.classList.add('hidden');
-                loading.classList.remove('visible');
-                generateBtn.disabled = false;
-
-                if (!response.ok) {
-                    throw new Error(data.error || `API error: ${response.status}`);
+                
+                // Validate and filter response
+                validateResponse(data);
+                let content = data.choices[0].message.content;
+                content = filterContent(content);
+                
+                if (!qualityCheck(content)) {
+                    throw new Error('Generated content did not meet quality standards');
                 }
-
-                if (!data.choices?.[0]?.message?.content) {
-                    throw new Error('Invalid response format from API');
-                }
-
-                const generatedText = data.choices[0].message.content;
+                
+                // Calculate and display stats
+                const stats = getGenerationStats(data);
+                updateStatsDisplay(stats);
+                
+                // Show result
                 result.classList.remove('hidden');
-                copyText.innerHTML = generatedText.split('\n').map(line => `<p>${line}</p>`).join('');
-                copyText.focus();
-
-                // Update usage statistics
+                copyText.innerHTML = content.split('\n').map(line => `<p>${line}</p>`).join('');
+                
+                // Update monthly stats
                 updateUsageStats();
+                
             } catch (err) {
-                loading.classList.add('hidden');
-                loading.classList.remove('visible');
-                generateBtn.disabled = false;
-                error.classList.remove('hidden');
                 error.textContent = err.message || 'An error occurred while generating copy';
-                console.error('Generation error:', err);
-            }
-        }
-
-        // Clear form handler
-        document.getElementById('clearBtn').addEventListener('click', function() {
-            document.getElementById('result').classList.add('hidden');
-            document.getElementById('error').classList.add('hidden');
-            document.getElementById('prompt').value = '';
-            document.getElementById('tone').value = 50;
-        });
-
-        // Copy to clipboard functionality
-        async function copyToClipboard() {
-            const copyText = document.getElementById('copyText');
-            try {
-                await navigator.clipboard.writeText(copyText.textContent);
-                
-                const toast = document.createElement('div');
-                toast.className = 'toast';
-                toast.textContent = 'Copied to clipboard!';
-                document.body.appendChild(toast);
-                
-                setTimeout(() => {
-                    toast.remove();
-                }, 3000);
-            } catch (err) {
-                console.error('Failed to copy:', err);
-                const error = document.getElementById('error');
-                error.textContent = 'Failed to copy text to clipboard';
                 error.classList.remove('hidden');
+                console.error('Generation error:', err);
+            } finally {
+                loading.classList.add('hidden');
+                generateBtn.disabled = false;
             }
         }
 
-        // Template selection handler
-        function selectTemplate(type) {
-            const templates = {
-                'product-launch': 'Write a compelling product launch announcement for [product name]. Highlight its key features, unique selling points, and the problems it solves. Target audience: [describe audience]. Include a strong call to action.',
-                'service-promotion': 'Create promotional copy for [service name]. Emphasize the benefits, value proposition, and how it stands out from competitors. Include testimonials or social proof elements and a clear next step for interested customers.',
-                'social-media': 'Write an engaging social media post about [topic/product/service]. Keep it concise, conversational, and shareable. Include relevant hashtags and a compelling call to action.',
-                'email': 'Compose an email campaign for [purpose]. Include an attention-grabbing subject line, personalized greeting, compelling body content, and clear call-to-action. Focus on building relationship and driving engagement.'
-            };
-
-            const prompt = document.getElementById('prompt');
-            if (prompt && templates[type]) {
-                prompt.value = templates[type];
-                prompt.focus();
-                
-                const bracketPos = prompt.value.indexOf('[');
-                if (bracketPos > -1) {
-                    prompt.setSelectionRange(bracketPos, bracketPos + 1);
-                }
-            }
-        }
-
-        // Add this function to your existing scripts
-        function updateToneValue(value) {
-            const toneValue = document.querySelector('.tone-value');
-            const toneDescription = document.getElementById('toneDescription');
-            toneValue.textContent = value;
-            
-            // Update the position of the value indicator
-            const slider = document.querySelector('.tone-slider');
-            const percent = (value - slider.min) / (slider.max - slider.min) * 100;
-            toneValue.style.left = `${percent}%`;
-            
-            // Update the tone description
-            if (value < 33) {
-                toneDescription.textContent = 'Friendly and conversational tone, perfect for social media and casual communications';
-            } else if (value < 66) {
-                toneDescription.textContent = 'Balanced and professional tone, suitable for most business communications';
-            } else {
-                toneDescription.textContent = 'Formal and sophisticated tone, ideal for official documents and corporate communications';
-            }
-        }
-
-        // Initialize the tone value on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            updateToneValue(50); // Set initial value
-        });
-
-        // Function to update usage statistics
-        async function updateUsageStats() {
-            try {
-                const response = await fetch('/api/stats');
-                const stats = await response.json();
-                
-                if (stats.error) {
-                    console.warn('Stats not available:', stats.error);
-                    return;
-                }
-
-                document.getElementById('usageStats').classList.remove('hidden');
-                document.getElementById('totalTokens').textContent = stats.totalTokens.toLocaleString();
-                document.getElementById('totalCost').textContent = `$${stats.totalCost.toFixed(2)}`;
-                document.getElementById('totalRequests').textContent = stats.totalRequests.toLocaleString();
-            } catch (error) {
-                console.error('Failed to fetch usage stats:', error);
-            }
-        }
-
-        // Update stats when page loads and after each generation
-        document.addEventListener('DOMContentLoaded', updateUsageStats);
+        // Initialize form
+        document.getElementById('copyForm').addEventListener('submit', handleSubmit);
         
-        // Update the handleSubmit function to refresh stats after generation
-        const originalHandleSubmit = handleSubmit;
-        handleSubmit = async (event) => {
-            await originalHandleSubmit(event);
-            updateUsageStats();
-        };
+        // Initialize templates
+        const templateSelect = document.getElementById('templateSelect');
+        getTemplateOptions().forEach(({ id, name }) => {
+            const option = document.createElement('option');
+            option.value = id;
+            option.textContent = name;
+            templateSelect.appendChild(option);
+        });
     </script>
 </body>
 </html>
