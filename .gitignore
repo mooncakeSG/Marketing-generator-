@@ -10,6 +10,11 @@ yarn-error.log
 .env.local
 .env.*.local
 
+# Credentials
+config/*.json
+!config/example.json
+!config/google-credentials-example.json
+
 # Logs
 logs
 *.log
@@ -52,3 +57,12 @@ Thumbs.db
 /build
 .vercel
 .netlify
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.pem
+.cache/
+.temp/
