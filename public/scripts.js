@@ -214,20 +214,34 @@ async function generateCopy() {
             })
         });
 
+        // Add response status check
+        console.log('Response status:', response.status);
+        
         const data = await response.json();
+        console.log('Raw API response:', data);
         
         if (!response.ok) {
-            throw new Error(data.error || 'Failed to generate copy');
+            throw new Error(data.error || `API error: ${response.status}`);
         }
 
-        console.log('Received API response:', data);
+        // Enhanced validation
+        if (!data) {
+            throw new Error('Empty response received');
+        }
+
+        if (!Array.isArray(data.choices)) {
+            console.error('Invalid response structure:', data);
+            throw new Error('Response missing choices array');
+        }
 
         if (!data.choices?.[0]?.message?.content) {
-            throw new Error('Invalid response format');
+            console.error('Invalid message structure:', data.choices?.[0]);
+            throw new Error('Response missing message content');
         }
 
         // Display the generated content
         const content = data.choices[0].message.content;
+        console.log('Extracted content:', content);
         resultDiv.innerHTML = `
             <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
                 <div class="flex justify-between items-center mb-4">
