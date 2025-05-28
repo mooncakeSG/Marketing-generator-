@@ -1,44 +1,87 @@
+// Templates module
+
 // Template definitions
-const templates = {
+const TEMPLATES = {
     'product-launch': {
-        name: 'Product Launch',
+        id: 'product-launch',
+        name: 'Product Launch Announcement',
         prompt: 'Write a compelling product launch announcement for [Product Name]. Include key features, benefits, and a strong call to action. Target audience: [Target Audience]. Key selling points: [Key Points].',
-        tone: 75
+        tone: 70
     },
     'social-media': {
-        name: 'Social Media Teaser',
-        prompt: 'Create engaging social media copy for [Product/Service]. Include hashtags, emojis, and a hook that drives engagement. Platform: [Platform]. Goal: [Marketing Goal].',
+        id: 'social-media',
+        name: 'Social Media Post',
+        prompt: 'Create an engaging social media post about [Topic]. Include hashtags and a call to action. Target platform: [Platform]. Key message: [Message].',
         tone: 40
     },
     'email-campaign': {
+        id: 'email-campaign',
         name: 'Email Campaign',
-        prompt: 'Write an email marketing campaign for [Product/Service]. Include subject line, preview text, and body copy. Focus on [Key Benefit] and include a clear call to action.',
+        prompt: 'Write an email marketing campaign for [Product/Service]. Include subject line, body, and call to action. Target audience: [Audience]. Key benefits: [Benefits].',
         tone: 60
     },
-    'product-comparison': {
-        name: 'Product Comparison',
-        prompt: 'Create a marketing comparison between [Product] and its competitors. Highlight unique selling points, advantages, and why customers should choose our product. Key differentiators: [Differentiators].',
-        tone: 70
+    'blog-post': {
+        id: 'blog-post',
+        name: 'Blog Post',
+        prompt: 'Write a blog post about [Topic]. Include introduction, main points, and conclusion. Target audience: [Audience]. Key takeaways: [Takeaways].',
+        tone: 50
     },
-    'brand-storytelling': {
-        name: 'Brand Storytelling',
-        prompt: 'Tell the story of [Brand/Company]. Include the origin, mission, values, and vision. Focus on emotional connection and authenticity. Key message: [Key Message].',
-        tone: 65
+    'press-release': {
+        id: 'press-release',
+        name: 'Press Release',
+        prompt: 'Write a press release about [News/Announcement]. Include quotes, facts, and contact information. Key points: [Key Points].',
+        tone: 80
     }
 };
 
-// Get template options for dropdown
-export function getTemplateOptions() {
-    return Object.entries(templates).map(([id, template]) => ({
-        id,
-        name: template.name
-    }));
-}
-
-// Get specific template by ID
+// Get template by ID
 export function getTemplate(templateId) {
-    return templates[templateId];
+    if (!templateId) return null;
+    return TEMPLATES[templateId] || null;
 }
 
-// Export templates object for reference
-export const templateList = templates; 
+// Get all available templates
+export function getTemplateOptions() {
+    return Object.values(TEMPLATES);
+}
+
+// Validate template
+export function validateTemplate(templateId) {
+    if (!templateId) {
+        throw new Error('Template ID is required');
+    }
+    
+    const template = TEMPLATES[templateId];
+    if (!template) {
+        throw new Error('Invalid template ID');
+    }
+    
+    return template;
+}
+
+// Process template with variables
+export function processTemplate(template, variables) {
+    if (!template || !template.prompt) {
+        throw new Error('Invalid template');
+    }
+    
+    let processedPrompt = template.prompt;
+    
+    // Replace variables in the format [Variable]
+    if (variables) {
+        Object.entries(variables).forEach(([key, value]) => {
+            const placeholder = new RegExp(`\\[${key}\\]`, 'g');
+            processedPrompt = processedPrompt.replace(placeholder, value);
+        });
+    }
+    
+    return {
+        ...template,
+        prompt: processedPrompt
+    };
+}
+
+// Export template utilities
+export const utils = {
+    TEMPLATES
+}; 

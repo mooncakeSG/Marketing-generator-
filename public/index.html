@@ -203,14 +203,40 @@
         }
 
         .form-group {
-            margin-bottom: 32px !important;
+            margin-bottom: 1.5rem !important;
+            position: relative !important;
+        }
+
+        .form-group textarea {
+            width: 100% !important;
+            min-height: 120px !important;
+            padding: 0.75rem !important;
+            border: 2px solid var(--border-color) !important;
+            border-radius: 0.375rem !important;
+            background-color: var(--bg-color) !important;
+            color: var(--text-color) !important;
+            font-size: 1rem !important;
+            line-height: 1.5 !important;
+            transition: all 0.3s ease !important;
+            display: block !important;
+            resize: vertical !important;
+        }
+
+        .form-group textarea:focus {
+            outline: none !important;
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+        }
+
+        .form-group textarea.error {
+            border-color: #EF4444 !important;
+            background-color: var(--bg-color) !important;
         }
 
         .form-group label {
             display: block !important;
-            font-size: 18px !important;
+            margin-bottom: 0.5rem !important;
             font-weight: 500 !important;
-            margin-bottom: 12px !important;
             color: var(--text-color) !important;
         }
 
@@ -379,24 +405,75 @@
             margin: 16px 0 !important;
         }
 
-        .toast {
+        /* Toast styles - Tailwind-inspired */
+        .toast-container {
             position: fixed !important;
-            bottom: 32px !important;
-            right: 32px !important;
-            background: var(--primary-color) !important;
-            color: white !important;
-            padding: 12px 24px !important;
-            border-radius: 8px !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 1000 !important;
+            top: 1rem !important;
+            right: 1rem !important;
+            z-index: 50 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.5rem !important;
+        }
+
+        .toast {
+            --tw-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+            box-shadow: var(--tw-shadow) !important;
+            border-radius: 0.375rem !important;
+            padding: 1rem 1.5rem !important;
+            min-width: 300px !important;
+            max-width: 400px !important;
+            transform: translateX(100%) !important;
+            opacity: 0 !important;
+            transition: all 0.3s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.75rem !important;
+            font-size: 0.875rem !important;
+            line-height: 1.25rem !important;
+            font-weight: 500 !important;
         }
 
         .toast.visible {
-            transform: translateY(0);
-            opacity: 1;
+            transform: translateX(0) !important;
+            opacity: 1 !important;
+        }
+
+        .toast.success {
+            background-color: #10B981 !important;
+            color: #ffffff !important;
+            border-left: 4px solid #059669 !important;
+        }
+
+        .toast.error {
+            background-color: #EF4444 !important;
+            color: #ffffff !important;
+            border-left: 4px solid #DC2626 !important;
+        }
+
+        .toast.info {
+            background-color: #3B82F6 !important;
+            color: #ffffff !important;
+            border-left: 4px solid #2563EB !important;
+        }
+
+        .toast.warning {
+            background-color: #F59E0B !important;
+            color: #ffffff !important;
+            border-left: 4px solid #D97706 !important;
+        }
+
+        /* Dark mode support */
+        html.dark .toast {
+            --tw-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        @media (max-width: 640px) {
+            .toast {
+                min-width: auto !important;
+                max-width: calc(100vw - 2rem) !important;
+                margin: 0 1rem !important;
+            }
         }
 
         /* Dark mode styles */
@@ -600,14 +677,6 @@
             display: none;
         }
 
-        /* Add Toast Container */
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-
         /* Add Status Indicator */
         .status-indicator {
             position: fixed;
@@ -652,6 +721,204 @@
         .status-indicator.hidden {
             opacity: 0;
         }
+
+        /* Validation and Error Styles */
+        .error-message {
+            position: absolute !important;
+            left: 0 !important;
+            bottom: -1.5rem !important;
+            color: #EF4444 !important;
+            font-size: 0.875rem !important;
+            transition: all 0.3s ease !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .error-message:not(.hidden) {
+            opacity: 1 !important;
+        }
+
+        textarea.error, input.error {
+            border-color: #EF4444 !important;
+            background-color: #FEF2F2 !important;
+            transition: all 0.3s ease !important;
+        }
+
+        textarea.error::placeholder, input.error::placeholder {
+            color: #EF4444 !important;
+            opacity: 0.7 !important;
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both !important;
+        }
+
+        /* Add a helper text style */
+        .input-helper {
+            margin-top: 0.25rem !important;
+            font-size: 0.875rem !important;
+            color: var(--text-color) !important;
+            opacity: 0.7 !important;
+        }
+
+        /* Add focus styles that maintain error state */
+        textarea:focus, input:focus {
+            outline: none !important;
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        textarea.error:focus, input.error:focus {
+            border-color: #EF4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+        }
+
+        /* Add transition for error state */
+        textarea, input {
+            transition: all 0.3s ease !important;
+            border: 2px solid transparent !important;
+        }
+
+        /* Form Container Styles */
+        .input-container {
+            position: relative !important;
+            width: 100% !important;
+        }
+
+        .input-container textarea {
+            display: block !important;
+            width: 100% !important;
+            min-height: 120px !important;
+            padding: 0.75rem !important;
+            border: 2px solid var(--border-color) !important;
+            border-radius: 0.375rem !important;
+            background-color: var(--bg-color) !important;
+            color: var(--text-color) !important;
+            font-size: 1rem !important;
+            line-height: 1.5 !important;
+            margin-bottom: 0.5rem !important;
+            resize: vertical !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+
+        .input-container textarea:focus {
+            outline: none !important;
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+        }
+
+        .input-container textarea.error {
+            border-color: #EF4444 !important;
+        }
+
+        .input-container .error-message {
+            color: #EF4444 !important;
+            font-size: 0.875rem !important;
+            margin-top: 0.25rem !important;
+            display: none !important;
+        }
+
+        .input-container .error-message:not(.hidden) {
+            display: block !important;
+        }
+
+        .input-container .input-helper {
+            color: var(--text-color) !important;
+            opacity: 0.7 !important;
+            font-size: 0.875rem !important;
+            margin-top: 0.25rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+
+        /* Form Group Spacing */
+        .form-group {
+            margin-bottom: 2rem !important;
+        }
+
+        .form-group label {
+            display: block !important;
+            margin-bottom: 0.5rem !important;
+            font-weight: 500 !important;
+            color: var(--text-color) !important;
+        }
+
+        /* Essential form styles */
+        #prompt {
+            display: block !important;
+            width: 100% !important;
+            min-height: 120px !important;
+            resize: vertical !important;
+            margin-bottom: 0.5rem !important;
+            border: 2px solid var(--border-color) !important;
+            border-radius: 0.375rem !important;
+            padding: 0.75rem !important;
+            background-color: var(--bg-color) !important;
+            color: var(--text-color) !important;
+        }
+
+        #prompt.error {
+            border-color: #EF4444 !important;
+        }
+
+        .error-message {
+            color: #EF4444 !important;
+            font-size: 0.875rem !important;
+            margin-top: 0.25rem !important;
+            display: none !important;
+        }
+
+        .error-message:not(.hidden) {
+            display: block !important;
+        }
+
+        /* Basic textarea styles */
+        textarea#prompt {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 100% !important;
+            min-height: 120px !important;
+            padding: 12px !important;
+            border: 2px solid #e5e7eb !important;
+            border-radius: 6px !important;
+            background: var(--bg-color) !important;
+            color: var(--text-color) !important;
+            font-size: 16px !important;
+            line-height: 1.5 !important;
+            margin-bottom: 8px !important;
+            resize: vertical !important;
+            position: static !important;
+            z-index: 1 !important;
+        }
+
+        textarea#prompt.error {
+            border-color: #EF4444 !important;
+        }
+
+        /* Simple error message */
+        .error-message {
+            color: #EF4444 !important;
+            font-size: 14px !important;
+            margin-top: 4px !important;
+            display: none !important;
+        }
+
+        .error-message:not(.hidden) {
+            display: block !important;
+        }
+
+        /* Helper text */
+        .input-helper {
+            color: #6B7280 !important;
+            font-size: 14px !important;
+            margin-top: 4px !important;
+        }
+
+        /* Form group */
+        .form-group {
+            margin-bottom: 24px !important;
+        }
     </style>
     <link rel="stylesheet" href="/styles.css">
 </head>
@@ -663,8 +930,8 @@
                 <button id="themeButton" class="theme-toggle" type="button">
                     <i class="fas fa-sun"></i>
                     <span>Toggle Theme</span>
-            </button>
-        </div>
+                </button>
+            </div>
             <p class="subtitle">Generate compelling marketing copy for your products and services using AI</p>
             
             <!-- Debug version of template section -->
@@ -680,9 +947,16 @@
             <form id="copyForm" role="form" aria-label="Marketing copy generation form" onsubmit="window.handleSubmit(event)">
                 <div class="form-group">
                     <label for="prompt">Marketing Brief</label>
-                    <textarea id="prompt" name="prompt" rows="4" required
-                              placeholder="Enter your prompt here... For example: Write a compelling marketing copy for a new AI-powered smartwatch that focuses on health tracking and productivity features."
-                              aria-required="true"></textarea>
+                    <textarea 
+                        id="prompt" 
+                        name="prompt" 
+                        rows="4" 
+                        required
+                        placeholder="Enter your prompt here... For example: Write a compelling marketing copy for a new AI-powered smartwatch that focuses on health tracking and productivity features."
+                    ></textarea>
+                    <div class="input-helper">
+                        Minimum 10 characters. Avoid using special characters like &lt;, &gt;, [, ], {, }.
+                    </div>
                     <div id="promptError" class="error-message hidden"></div>
                 </div>
 
@@ -784,149 +1058,48 @@
         import { validatePrompt, validateTone, validateResponse, filterContent, qualityCheck } from './scripts/validation.js';
         import { exportAsText, exportAsPDF, getExportMetadata } from './scripts/export.js';
         import { startTiming, endTiming, calculateTokenUsage, updateStatsDisplay, getGenerationStats, updateUsageStats, resetStats } from './scripts/stats.js';
-        import { updateToneValue, copyToClipboard, showError, hideError, showLoading, hideLoading, updateResult, clearForm } from './scripts/ui.js';
+        import { 
+            updateToneValue, 
+            copyToClipboard, 
+            showError, 
+            hideError, 
+            showLoading, 
+            hideLoading, 
+            updateResult, 
+            clearForm,
+            showValidationError,
+            hideValidationError,
+            showToast,
+            showStatusIndicator
+        } from './scripts/ui.js';
 
-        // Initialize global functions first
-        window.updateToneValue = function(value) {
-            try {
-                updateToneValue(value);
-            } catch (err) {
-                console.error('Error updating tone:', err);
-                // Fallback update if the main function fails
-                const toneValue = document.querySelector('.tone-value');
-                const toneDescription = document.getElementById('toneDescription');
-                if (toneValue) {
-                    toneValue.textContent = value;
-                }
-                if (toneDescription) {
-                    if (value < 33) {
-                        toneDescription.textContent = 'Casual and conversational tone';
-                    } else if (value < 66) {
-                        toneDescription.textContent = 'Balanced and professional tone';
-                    } else {
-                        toneDescription.textContent = 'Formal and corporate tone';
-                    }
-                }
-            }
-        };
-
-        window.loadTemplate = function(templateId) {
-            try {
-                const template = getTemplate(templateId);
-                if (template) {
-                    document.getElementById('prompt').value = template.prompt;
-                    document.getElementById('tone').value = template.tone || 50;
-                    window.updateToneValue(template.tone || 50);
-                }
-            } catch (err) {
-                showError('Failed to load template');
-                console.error('Template loading error:', err);
-            }
-        };
-
-        window.exportAsText = async function() {
-            try {
-                await exportAsText();
-            } catch (err) {
-                showError(err.message);
-            }
-        };
-
-        window.exportAsPDF = async function() {
-            try {
-                await exportAsPDF();
-            } catch (err) {
-                showError(err.message);
-            }
-        };
-
+        // Initialize global functions
+        window.updateToneValue = updateToneValue;
         window.copyToClipboard = copyToClipboard;
         window.clearForm = function() {
             clearForm();
             resetStats();
         };
         window.handleSubmit = handleSubmit;
+        window.exportAsText = exportAsText;
+        window.exportAsPDF = exportAsPDF;
 
-        // Initialize templates
-        function initializeTemplates() {
+        // Add loadTemplate function
+        window.loadTemplate = function(templateId) {
             try {
-                const templateSelect = document.getElementById('templateSelect');
-                const templates = getTemplateOptions();
-                
-                templates.forEach(template => {
-                    const option = document.createElement('option');
-                    option.value = template.id;
-                    option.textContent = template.name;
-                    templateSelect.appendChild(option);
-                });
+                const template = getTemplate(templateId);
+                if (template) {
+                    document.getElementById('prompt').value = template.prompt;
+                    document.getElementById('tone').value = template.tone || 50;
+                    updateToneValue(template.tone || 50);
+                }
             } catch (err) {
-                console.error('Error initializing templates:', err);
-                showError('Failed to load templates');
+                console.error('Template loading error:', err);
+                showError('Failed to load template');
             }
-        }
+        };
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            try {
-                initializeTemplates();
-                // Set initial tone value
-                const initialTone = document.getElementById('tone')?.value || 50;
-                window.updateToneValue(initialTone);
-            } catch (err) {
-                console.error('Error during initialization:', err);
-            }
-        });
-
-        // Add toast notification functions
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            
-            let content = '';
-            if (type === 'info') {
-                content = `
-                    <div class="toast-spinner"></div>
-                    <div class="toast-content">${message}</div>
-                `;
-            } else {
-                content = `
-                    <div class="toast-content">${message}</div>
-                    <button class="toast-close" onclick="this.parentElement.remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-            }
-            
-            toast.innerHTML = content;
-            document.getElementById('toastContainer').appendChild(toast);
-            
-            // Trigger reflow
-            toast.offsetHeight;
-            toast.classList.add('show');
-            
-            if (type !== 'info') {
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                    setTimeout(() => toast.remove(), 300);
-                }, 3000);
-            }
-            
-            return toast;
-        }
-
-        function showStatusIndicator(show, message = 'Generating copy...') {
-            const indicator = document.getElementById('statusIndicator');
-            const statusText = document.getElementById('statusText');
-            
-            if (show) {
-                statusText.textContent = message;
-                indicator.classList.add('show');
-            } else {
-                indicator.classList.remove('show');
-            }
-        }
-
-        // Update handleSubmit function
+        // Form submission handling
         async function handleSubmit(event) {
             event.preventDefault();
             
@@ -934,35 +1107,49 @@
             const toneField = document.getElementById('tone');
             const generateBtn = document.getElementById('generateBtn');
             
-            // Disable export buttons during generation
-            document.getElementById('exportTextBtn').disabled = true;
-            document.getElementById('exportPdfBtn').disabled = true;
-            document.getElementById('copyBtn').disabled = true;
-            
-            // Clear previous errors and reset stats
+            // Clear previous errors
             hideError();
-            resetStats();
-            
-            // Show non-obstructive loading indicators
-            const loadingToast = showToast('Generating your marketing copy...', 'info');
-            showStatusIndicator(true);
+            hideValidationError('prompt');
             
             try {
                 // Validate inputs
-                const prompt = validatePrompt(promptField.value);
-                const tone = validateTone(toneField.value);
-                
+                const promptValidation = validatePrompt(promptField.value);
+                if (!promptValidation.isValid) {
+                    showValidationError(promptValidation.message, 'prompt');
+                    // Add toast notification for validation error
+                    showToast(promptValidation.message, 'error', 5000);
+                    return;
+                }
+
+                const toneValidation = validateTone(toneField.value);
+                if (!toneValidation.isValid) {
+                    showValidationError(toneValidation.message, 'tone');
+                    // Add toast notification for tone validation error
+                    showToast(toneValidation.message, 'error', 5000);
+                    return;
+                }
+
+                // Disable buttons and show loading state
+                generateBtn.disabled = true;
+                document.getElementById('exportTextBtn').disabled = true;
+                document.getElementById('exportPdfBtn').disabled = true;
+                document.getElementById('copyBtn').disabled = true;
+
+                // Show non-obstructive loading indicators
+                showStatusIndicator(true);
+
                 // Start timing
                 startTiming();
-                
-                generateBtn.disabled = true;
 
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ prompt, tone })
+                    body: JSON.stringify({
+                        prompt: promptField.value.trim(),
+                        tone: parseInt(toneField.value)
+                    })
                 });
 
                 if (!response.ok) {
@@ -970,21 +1157,20 @@
                 }
 
                 const data = await response.json();
-                
+
                 // Calculate statistics
                 const generationTime = endTiming();
                 calculateTokenUsage(data);
-                
+
                 // Validate and filter response
-                validateResponse(data);
-                
-                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-                    throw new Error('Invalid response format from API');
+                const responseValidation = validateResponse(data);
+                if (!responseValidation.isValid) {
+                    throw new Error(responseValidation.message);
                 }
 
                 let content = data.choices[0].message.content;
                 content = filterContent(content);
-                
+
                 if (!qualityCheck(content)) {
                     throw new Error('Generated content did not meet quality standards');
                 }
@@ -995,48 +1181,51 @@
 
                 // Show result
                 updateResult(content);
-                
+
                 // Enable export buttons
                 document.getElementById('exportTextBtn').disabled = false;
                 document.getElementById('exportPdfBtn').disabled = false;
                 document.getElementById('copyBtn').disabled = false;
-                
+
                 // Update monthly stats
                 await updateUsageStats();
 
-                // Show success toast
-                showToast('Copy generated successfully!', 'success');
-                
+                // Show success toast that auto-dismisses
+                showToast('Copy generated successfully!', 'success', 3000);
+
             } catch (err) {
                 showError(err.message || 'An error occurred while generating copy');
-                showToast(err.message || 'An error occurred while generating copy', 'error');
+                showToast(err.message || 'An error occurred while generating copy', 'error', 5000);
                 console.error('Generation error:', err);
             } finally {
                 // Hide loading indicators
-                loadingToast?.remove();
                 showStatusIndicator(false);
                 generateBtn.disabled = false;
             }
         }
 
-        // Progress bar update function
-        function updateProgressBar(message, progress) {
-            const loading = document.getElementById('loading');
-            if (!loading) return;
-            
-            const progressText = loading.querySelector('p');
-            if (progressText) {
-                progressText.textContent = message;
-            }
-            
-            const progressBar = loading.querySelector('.progress-bar');
-            if (progressBar) {
-                progressBar.style.width = `${progress}%`;
-            }
-        }
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                // Initialize templates
+                const templateSelect = document.getElementById('templateSelect');
+                const templates = getTemplateOptions();
+                
+                templates.forEach(template => {
+                    const option = document.createElement('option');
+                    option.value = template.id;
+                    option.textContent = template.name;
+                    templateSelect.appendChild(option);
+                });
 
-        // Initialize form
-        document.getElementById('copyForm').addEventListener('submit', handleSubmit);
+                // Set initial tone value
+                const initialTone = document.getElementById('tone')?.value || 50;
+                updateToneValue(initialTone);
+            } catch (err) {
+                console.error('Error during initialization:', err);
+                showError('Failed to initialize application');
+            }
+        });
     </script>
 </body>
 </html>

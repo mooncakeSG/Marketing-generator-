@@ -1,72 +1,142 @@
-// Input validation module
+// Input validation and output filtering module
+
+// Banned words list (basic example - expand as needed)
+const BANNED_WORDS = [
+    'damn', 'hell', 'crap', 'sex', 'kill',
+    // Add more words as needed
+];
+
+// Input validation configuration
+const INPUT_CONFIG = {
+    minLength: 10,
+    maxLength: 1000,
+    allowedPattern: /^[\w\s.,!?'"()-]+$/,
+};
+
+// Validation result type
+class ValidationResult {
+    constructor(isValid, message = '') {
+        this.isValid = isValid;
+        this.message = message;
+    }
+}
+
+// Validation constants
+const MIN_LENGTH = 10;
+const SPECIAL_CHARS_REGEX = /[<>\[\]{}]/;
+// Optional: Basic inappropriate content filter
+const INAPPROPRIATE_WORDS = [
+    // Add inappropriate words here
+    // Example: 'badword1', 'badword2', etc.
+];
 
 // Validate prompt input
 export function validatePrompt(prompt) {
-    if (!prompt || !prompt.trim()) {
-        throw new Error('Please enter a prompt');
+    if (!prompt || typeof prompt !== 'string') {
+        return {
+            isValid: false,
+            message: 'Please enter your marketing brief'
+        };
     }
 
-    // Get effective length excluding placeholders
-    const effectiveLength = prompt.replace(/\[.*?\]/g, '').trim().length;
-
-    // Check minimum length - more lenient if contains placeholders
-    if (effectiveLength < 10 && !prompt.includes('[')) {
-        throw new Error('Prompt is too short. Please provide more details.');
+    // Check minimum length
+    if (prompt.length < MIN_LENGTH) {
+        return {
+            isValid: false,
+            message: `Input must be at least ${MIN_LENGTH} characters long`
+        };
     }
 
-    // Check maximum length
-    if (prompt.trim().length > 1000) {
-        throw new Error('Prompt is too long. Please keep it under 1000 characters.');
+    // Check for special characters
+    if (SPECIAL_CHARS_REGEX.test(prompt)) {
+        return {
+            isValid: false,
+            message: 'Input cannot contain brackets or special characters (<, >, [, ], {, })'
+        };
     }
 
-    return prompt.trim();
+    // Optional: Check for inappropriate content
+    const containsInappropriateContent = INAPPROPRIATE_WORDS.some(word => 
+        prompt.toLowerCase().includes(word.toLowerCase())
+    );
+    
+    if (containsInappropriateContent) {
+        return {
+            isValid: false,
+            message: 'Please ensure your content is appropriate and professional'
+        };
+    }
+
+    return {
+        isValid: true,
+        message: ''
+    };
 }
 
 // Validate tone value
 export function validateTone(tone) {
     const toneValue = parseInt(tone);
     if (isNaN(toneValue) || toneValue < 0 || toneValue > 100) {
-        throw new Error('Invalid tone value. Please use a value between 0 and 100.');
+        return new ValidationResult(false, 'Invalid tone value');
     }
-    return toneValue;
+    return new ValidationResult(true, '');
+}
+
+// Filter and clean output content
+export function filterContent(content) {
+    if (!content) return '';
+
+    let filteredContent = content;
+
+    // Remove any banned words
+    BANNED_WORDS.forEach(word => {
+        const regex = new RegExp(`\\b${word}\\b`, 'gi');
+        filteredContent = filteredContent.replace(regex, '[removed]');
+    });
+
+    // Remove repetitive sentences
+    filteredContent = removeRepetitiveSentences(filteredContent);
+
+    // Clean up excessive whitespace
+    filteredContent = filteredContent
+        .replace(/\s+/g, ' ')
+        .replace(/\n\s*\n\s*\n/g, '\n\n')
+        .trim();
+
+    return filteredContent;
+}
+
+// Helper function to remove repetitive sentences
+function removeRepetitiveSentences(text) {
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
+    const uniqueSentences = new Set();
+    const filteredSentences = sentences.filter(sentence => {
+        const normalized = sentence.trim().toLowerCase();
+        if (uniqueSentences.has(normalized)) {
+            return false;
+        }
+        uniqueSentences.add(normalized);
+        return true;
+    });
+    return filteredSentences.join(' ');
 }
 
 // Validate API response
 export function validateResponse(response) {
     if (!response) {
-        throw new Error('No response received from the server');
+        throw new Error('No response received from the API');
     }
 
-    if (response.error) {
-        throw new Error(response.error.message || 'Server error occurred');
+    if (!response.choices || !Array.isArray(response.choices) || response.choices.length === 0) {
+        throw new Error('Invalid response format from API');
     }
 
-    if (!response.choices || !response.choices[0] || !response.choices[0].message) {
-        throw new Error('Invalid response format from server');
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+        throw new Error('No content in API response');
     }
 
-    return response;
-}
-
-// Filter inappropriate content
-export function filterContent(content) {
-    if (!content) return '';
-
-    // List of inappropriate words/phrases to filter
-    const inappropriateWords = [
-        'profanity',
-        'offensive',
-        'inappropriate',
-        // Add more words as needed
-    ];
-
-    let filteredContent = content;
-    inappropriateWords.forEach(word => {
-        const regex = new RegExp(word, 'gi');
-        filteredContent = filteredContent.replace(regex, '[filtered]');
-    });
-
-    return filteredContent;
+    return new ValidationResult(true, '');
 }
 
 // Quality check for generated content
@@ -75,27 +145,37 @@ export function qualityCheck(content) {
         return false;
     }
 
-    // Minimum length check
+    // Check minimum content length
     if (content.length < 50) {
-        throw new Error('Generated content is too short');
+        return false;
     }
 
-    // Maximum length check
-    if (content.length > 5000) {
-        throw new Error('Generated content exceeds maximum length');
+    // Check for coherent sentence structure (basic check)
+    const sentences = content.match(/[^.!?]+[.!?]+/g) || [];
+    if (sentences.length < 2) {
+        return false;
     }
 
-    // Check for coherence (basic)
-    if (!content.includes('.') || !content.includes(' ')) {
-        throw new Error('Generated content lacks proper structure');
-    }
+    // Check for excessive repetition
+    const words = content.toLowerCase().match(/\b\w+\b/g) || [];
+    const wordFrequency = {};
+    words.forEach(word => {
+        wordFrequency[word] = (wordFrequency[word] || 0) + 1;
+    });
 
-    // Check for repetition
-    const sentences = content.split('.');
-    const uniqueSentences = new Set(sentences.map(s => s.trim()));
-    if (uniqueSentences.size < sentences.length * 0.8) {
-        throw new Error('Generated content contains too much repetition');
+    const maxRepetition = Math.ceil(words.length * 0.1); // Allow up to 10% repetition
+    const hasExcessiveRepetition = Object.values(wordFrequency).some(count => count > maxRepetition);
+
+    if (hasExcessiveRepetition) {
+        return false;
     }
 
     return true;
-} 
+}
+
+// Export validation utilities
+export const utils = {
+    BANNED_WORDS,
+    INPUT_CONFIG,
+    ValidationResult
+}; 

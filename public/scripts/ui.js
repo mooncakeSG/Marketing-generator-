@@ -160,4 +160,87 @@ export function exportAsPDF() {
         showError('Failed to export as PDF');
         return Promise.reject(err);
     }
+}
+
+// Show validation error
+export function showValidationError(message, inputId) {
+    const input = document.getElementById(inputId);
+    const errorDiv = document.getElementById(`${inputId}Error`);
+    
+    if (!input || !errorDiv) return;
+
+    // Only modify classes and text content
+    input.classList.add('error');
+    errorDiv.textContent = message;
+    errorDiv.classList.remove('hidden');
+
+    // Show toast notification
+    showToast(message, 'error', 5000);
+}
+
+// Hide validation error
+export function hideValidationError(inputId) {
+    const input = document.getElementById(inputId);
+    const errorDiv = document.getElementById(`${inputId}Error`);
+    
+    if (input) {
+        input.classList.remove('error');
+    }
+    
+    if (errorDiv) {
+        errorDiv.classList.add('hidden');
+    }
+}
+
+// Create error element if it doesn't exist
+function createErrorElement(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input || input.parentNode.querySelector(`#${inputId}Error`)) {
+        return document.getElementById(`${inputId}Error`);
+    }
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.id = `${inputId}Error`;
+    errorDiv.className = 'error-message';
+    errorDiv.setAttribute('role', 'alert');
+    
+    input.parentNode.insertBefore(errorDiv, input.nextSibling);
+    return errorDiv;
+}
+
+// Show toast notification
+export function showToast(message, type = 'info', duration = 0) {
+    const toastContainer = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    toastContainer.appendChild(toast);
+    
+    // Make the toast visible
+    setTimeout(() => toast.classList.add('visible'), 10);
+
+    if (duration > 0) {
+        setTimeout(() => {
+            toast.classList.remove('visible');
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+
+    return toast;
+}
+
+// Show status indicator
+export function showStatusIndicator(show, message = 'Generating copy...') {
+    const indicator = document.getElementById('statusIndicator');
+    const statusText = document.getElementById('statusText');
+    
+    if (!indicator || !statusText) return;
+    
+    if (show) {
+        statusText.textContent = message;
+        indicator.classList.add('show');
+    } else {
+        indicator.classList.remove('show');
+    }
 } 

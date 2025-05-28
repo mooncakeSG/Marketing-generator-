@@ -66,3 +66,13 @@ coverage/
 *.pem
 .cache/
 .temp/
+
+# Build output
+dist/
+build/
+out/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
